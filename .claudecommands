@@ -1,0 +1,57 @@
+# Claude Code Slash Commands for Lending POC
+
+## /sprint-status
+Check current sprint progress and load context from sprint documentation.
+This command will:
+1. Identify the current week based on date
+2. Load the current week's todo list
+3. Check completion status
+4. Load previous weeks' completed items for context
+5. Display progress summary
+
+## /sprint-recap
+Get a comprehensive recap of all sprint work completed so far.
+This command will:
+1. Load all week todo files
+2. Extract completed items from each week
+3. Summarize architectural decisions
+4. List created components/objects
+5. Provide context for continuing work
+
+## /sprint-continue
+Resume work on the current sprint tasks.
+This command will:
+1. Load current sprint todo
+2. Identify next incomplete task
+3. Load relevant documentation
+4. Suggest next actions
+5. Create working todo list
+
+## /sprint-week [number]
+Load specific week's sprint plan (e.g., /sprint-week 2).
+This command will:
+1. Load specified week's todo list
+2. Show planned vs completed
+3. Display deliverables
+4. Show dependencies from previous weeks
+
+## /project-context
+Load full project context including architecture, data model, and requirements.
+This command will:
+1. Load vision document
+2. Load architecture overview
+3. Load data model
+4. Load API design
+5. Summarize key decisions
+
+## Usage Examples:
+- Starting a new session: `/sprint-status`
+- Resuming after interruption: `/sprint-continue`
+- Planning next week: `/sprint-week 2`
+- Getting full context: `/project-context`
+
+## Implementation Notes:
+- Commands check /docs/ directory for sprint files
+- Week files follow pattern: week[N]-todo.md
+- Progress reports follow pattern: week[N]-progress-report.md
+- Commands are idempotent and safe to run multiple times

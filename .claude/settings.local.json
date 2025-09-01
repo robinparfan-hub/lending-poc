@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__notion__notion-create-pages",
+      "Bash(sf org list:*)",
+      "Bash(sf org display:*)",
+      "Bash(sf project deploy preview:*)",
+      "Bash(grep:*)",
+      "Bash(npm install)",
+      "Bash(npx playwright install:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(git config:*)",
+      "Bash(chmod:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
