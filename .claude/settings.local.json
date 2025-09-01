@@ -10,7 +10,10 @@
       "Bash(npx playwright install:*)",
       "Bash(npx playwright test:*)",
       "Bash(git config:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "mcp__notion__notion-update-page",
+      "Bash(./.claude/slash-commands/sprint-status.sh:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

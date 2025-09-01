@@ -1,0 +1,22 @@
+{
+  "commands": [
+    {
+      "name": "sprint-status",
+      "description": "Check current sprint progress and status",
+      "script": "sprint-status.sh",
+      "aliases": ["status", "sprint"]
+    },
+    {
+      "name": "sprint-continue",
+      "description": "Resume work on the next incomplete task",
+      "script": "sprint-continue.sh",
+      "aliases": ["continue", "next"]
+    },
+    {
+      "name": "sprint-recap",
+      "description": "View complete history of all sprint work",
+      "script": "sprint-recap.sh",
+      "aliases": ["recap", "history"]
+    }
+  ]
+}
