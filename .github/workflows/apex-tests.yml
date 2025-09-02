@@ -1,0 +1,55 @@
+name: Apex Tests
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+  
+  # Optional: Run on push to main
+  push:
+    branches: [ main ]
+    paths:
+      - 'force-app/**/*.cls'
+      - 'force-app/**/*.trigger'
+  
+  # Optional: Weekly sprint-end run (e.g., Fridays at 5 PM)
+  schedule:
+    - cron: '0 17 * * 5'
+
+jobs:
+  apex-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Salesforce CLI
+        run: |
+          npm install -g @salesforce/cli
+          sf --version
+      
+      - name: Authenticate to Salesforce
+        run: |
+          echo "${{ secrets.SFDX_AUTH_URL }}" > auth-file.json
+          sf org login sfdx-url --sfdx-url-file auth-file.json --alias lending-poc --set-default
+          rm auth-file.json
+      
+      - name: Deploy source to org
+        run: sf project deploy start --target-org lending-poc --wait 30
+      
+      - name: Run Apex tests
+        run: |
+          sf apex test run \
+            --target-org lending-poc \
+            --code-coverage \
+            --result-format human \
+            --wait 30 \
+            --test-level RunLocalTests
+      
+      - name: Check code coverage
+        run: |
+          coverage=$(sf apex test report --target-org lending-poc --code-coverage --json | jq '.result.summary.testRunCoverage')
+          echo "Code Coverage: ${coverage}%"
+          if (( $(echo "$coverage < 75" | bc -l) )); then
+            echo "❌ Code coverage is below 75%"
+            exit 1
+          fi
