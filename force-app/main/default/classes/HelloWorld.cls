@@ -1,7 +1,7 @@
 public with sharing class HelloWorld {
     
     /**
-     * Returns a greeting message
+     * Returns a simple greeting message
      * @return String greeting message
      */
     public static String sayHello() {
