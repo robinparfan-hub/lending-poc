@@ -4,16 +4,12 @@ on:
   # Manual trigger
   workflow_dispatch:
   
-  # Optional: Run on push to main
+  # Run on push to main when Apex code changes
   push:
     branches: [ main ]
     paths:
       - 'force-app/**/*.cls'
       - 'force-app/**/*.trigger'
-  
-  # Optional: Weekly sprint-end run (e.g., Fridays at 5 PM)
-  schedule:
-    - cron: '0 17 * * 5'
 
 jobs:
   apex-tests:
