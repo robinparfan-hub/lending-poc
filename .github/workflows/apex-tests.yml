@@ -24,10 +24,12 @@ jobs:
           sf --version
       
       - name: Authenticate to Salesforce
+        env:
+          SFDX_AUTH_URL: ${{ secrets.SFDX_AUTH_URL }}
         run: |
-          echo "${{ secrets.SFDX_AUTH_URL }}" > auth-file.json
-          sf org login sfdx-url --sfdx-url-file auth-file.json --alias lending-poc --set-default
-          rm auth-file.json
+          echo "$SFDX_AUTH_URL" > auth-url.txt
+          sf org login sfdx-url --sfdx-url-file auth-url.txt --alias lending-poc --set-default
+          rm auth-url.txt
       
       - name: Deploy source to org
         run: sf project deploy start --target-org lending-poc --wait 30
