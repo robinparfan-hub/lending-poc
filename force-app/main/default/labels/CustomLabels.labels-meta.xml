@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>Use_Mock_Data</fullName>
+        <categories>Configuration</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Use Mock Data for Lending Services</shortDescription>
+        <value>true</value>
+    </labels>
+    <labels>
+        <fullName>Mock_Response_Delay_Ms</fullName>
+        <categories>Configuration</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Mock Response Delay in Milliseconds</shortDescription>
+        <value>500</value>
+    </labels>
+    <labels>
+        <fullName>Enable_Service_Debug_Logging</fullName>
+        <categories>Configuration</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Enable Debug Logging for Services</shortDescription>
+        <value>true</value>
+    </labels>
+    <labels>
+        <fullName>Default_Credit_Bureau</fullName>
+        <categories>Configuration</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Default Credit Bureau for Evaluations</shortDescription>
+        <value>Experian</value>
+    </labels>
+    <labels>
+        <fullName>Max_Loan_Amount</fullName>
+        <categories>Configuration</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Maximum Loan Amount Allowed</shortDescription>
+        <value>100000</value>
+    </labels>
+    <labels>
+        <fullName>Min_Credit_Score</fullName>
+        <categories>Configuration</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Minimum Credit Score Required</shortDescription>
+        <value>620</value>
+    </labels>
+    <labels>
+        <fullName>Max_DTI_Ratio</fullName>
+        <categories>Configuration</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Maximum Debt to Income Ratio</shortDescription>
+        <value>45</value>
+    </labels>
+</CustomLabels>

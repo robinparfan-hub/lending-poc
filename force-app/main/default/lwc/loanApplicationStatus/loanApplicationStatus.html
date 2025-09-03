@@ -1,0 +1,221 @@
+<template>
+    <lightning-card title="Application Status" icon-name="standard:calibration">
+        <div class="slds-m-around_medium">
+            <lightning-spinner if:true={isLoading} alternative-text="Loading..."></lightning-spinner>
+            
+            <!-- Error Message -->
+            <div if:true={errorMessage} class="slds-m-bottom_medium">
+                <div class="slds-notify slds-notify_alert slds-alert_error">
+                    <span class="slds-assistive-text">Error</span>
+                    <h2>{errorMessage}</h2>
+                </div>
+            </div>
+
+            <!-- Application Found -->
+            <div if:true={applicationData}>
+                <!-- Status Progress -->
+                <div class="slds-m-bottom_large">
+                    <lightning-progress-indicator current-step={currentStep} type="path" variant="base">
+                        <lightning-progress-step label="Draft" value="draft"></lightning-progress-step>
+                        <lightning-progress-step label="Submitted" value="submitted"></lightning-progress-step>
+                        <lightning-progress-step label="Under Review" value="review"></lightning-progress-step>
+                        <lightning-progress-step label="Decision" value="decision"></lightning-progress-step>
+                        <lightning-progress-step label="Final" value="final"></lightning-progress-step>
+                    </lightning-progress-indicator>
+                </div>
+
+                <!-- Status Summary -->
+                <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                            <div class="slds-text-title_caps slds-text-color_weak">Current Status</div>
+                            <div class="slds-text-heading_small">
+                                <lightning-badge label={applicationData.Status__c} variant={statusVariant}></lightning-badge>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                            <div class="slds-text-title_caps slds-text-color_weak">Application Number</div>
+                            <div class="slds-text-heading_small">{applicationData.Name}</div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-text-title_caps slds-text-color_weak">Requested Amount</div>
+                            <div class="slds-text-heading_small">
+                                <lightning-formatted-number 
+                                    value={applicationData.Amount_Requested__c}
+                                    format-style="currency">
+                                </lightning-formatted-number>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-text-title_caps slds-text-color_weak">Application Date</div>
+                            <div class="slds-text-heading_small">
+                                <lightning-formatted-text value={applicationData.Application_Date__c}></lightning-formatted-text>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approved Offer Details -->
+                <div if:true={showApprovedDetails} class="slds-box slds-theme_success slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_medium">
+                        <lightning-icon icon-name="utility:success" size="small" class="slds-m-right_x-small"></lightning-icon>
+                        Congratulations! Your loan has been approved
+                    </h3>
+                    
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-col slds-size_1-of-3 slds-m-bottom_small">
+                            <div class="slds-text-title_caps slds-text-color_weak">Approved Amount</div>
+                            <div class="slds-text-heading_medium">
+                                <lightning-formatted-number 
+                                    value={applicationData.Approved_Amount__c}
+                                    format-style="currency">
+                                </lightning-formatted-number>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3 slds-m-bottom_small">
+                            <div class="slds-text-title_caps slds-text-color_weak">Interest Rate</div>
+                            <div class="slds-text-heading_medium">
+                                <lightning-formatted-number 
+                                    value={applicationData.Interest_Rate__c}
+                                    format-style="percent-fixed"
+                                    maximum-fraction-digits="2">
+                                </lightning-formatted-number>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3 slds-m-bottom_small">
+                            <div class="slds-text-title_caps slds-text-color_weak">Monthly Payment</div>
+                            <div class="slds-text-heading_medium">
+                                <lightning-formatted-number 
+                                    value={applicationData.Monthly_Payment__c}
+                                    format-style="currency">
+                                </lightning-formatted-number>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div if:true={showOfferActions} class="slds-m-top_medium">
+                        <lightning-button 
+                            class="slds-m-right_small" 
+                            label="Accept Offer" 
+                            variant="brand"
+                            onclick={handleAcceptOffer}
+                            disabled={isLoading}>
+                        </lightning-button>
+                        <lightning-button 
+                            label="Decline Offer" 
+                            variant="destructive"
+                            onclick={handleDeclineOffer}
+                            disabled={isLoading}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <!-- Declined Application -->
+                <div if:true={showDeclinedDetails} class="slds-box slds-theme_error slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_medium">
+                        <lightning-icon icon-name="utility:error" size="small" class="slds-m-right_x-small"></lightning-icon>
+                        Application Declined
+                    </h3>
+                    
+                    <div if:true={applicationData.declineMessage}>
+                        <p>{applicationData.declineMessage}</p>
+                    </div>
+                    
+                    <div if:true={applicationData.Reason_Codes__c} class="slds-m-top_small">
+                        <div class="slds-text-title_caps slds-text-color_weak">Reason Codes</div>
+                        <div>{applicationData.Reason_Codes__c}</div>
+                    </div>
+                </div>
+
+                <!-- Applicant Information -->
+                <div class="slds-m-top_large">
+                    <h3 class="slds-text-heading_small slds-m-bottom_medium">Applicant Information</h3>
+                    <div class="slds-grid slds-wrap">
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                            <div class="slds-text-title_caps slds-text-color_weak">Name</div>
+                            <div>{applicationData.Applicant_Profile__r.Name}</div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                            <div class="slds-text-title_caps slds-text-color_weak">Email</div>
+                            <div>{applicationData.Applicant_Profile__r.Email__c}</div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                            <div class="slds-text-title_caps slds-text-color_weak">Phone</div>
+                            <div>{applicationData.Applicant_Profile__r.Phone__c}</div>
+                        </div>
+                        <div if:true={applicationData.Applicant_Profile__r.Total_Income__c} class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                            <div class="slds-text-title_caps slds-text-color_weak">Annual Income</div>
+                            <div>
+                                <lightning-formatted-number 
+                                    value={applicationData.Applicant_Profile__r.Total_Income__c}
+                                    format-style="currency">
+                                </lightning-formatted-number>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Application Found -->
+            <div if:false={applicationData} class="slds-text-align_center slds-m-top_large">
+                <lightning-icon icon-name="utility:warning" size="large" class="slds-m-bottom_medium"></lightning-icon>
+                <h3 class="slds-text-heading_medium slds-m-bottom_small">No Application Found</h3>
+                <p class="slds-text-color_weak">Please provide a valid application ID to view status.</p>
+            </div>
+        </div>
+
+        <!-- Offer Actions Modal -->
+        <template if:true={showModal}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" 
+                                title="Close" onclick={closeModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 class="slds-text-heading_medium slds-hyphenate">{modalTitle}</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <div if:true={isAcceptModal}>
+                            <p>By accepting this loan offer, you agree to the terms and conditions.</p>
+                            <div class="slds-m-top_medium">
+                                <lightning-input 
+                                    type="text" 
+                                    label="Digital Signature (Type your full name)"
+                                    value={digitalSignature}
+                                    onchange={handleSignatureChange}
+                                    required>
+                                </lightning-input>
+                            </div>
+                        </div>
+                        <div if:true={isDeclineModal}>
+                            <p>Please let us know why you're declining this offer (optional):</p>
+                            <div class="slds-m-top_medium">
+                                <lightning-textarea 
+                                    label="Reason for declining"
+                                    value={declineReason}
+                                    onchange={handleDeclineReasonChange}>
+                                </lightning-textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button 
+                            class="slds-m-right_small"
+                            label="Cancel" 
+                            onclick={closeModal}>
+                        </lightning-button>
+                        <lightning-button 
+                            label={confirmButtonLabel}
+                            variant={confirmButtonVariant}
+                            onclick={confirmAction}
+                            disabled={confirmDisabled}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </lightning-card>
+</template>

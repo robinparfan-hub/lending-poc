@@ -1,0 +1,279 @@
+<template>
+    <!-- Draft/Application Entry Stage -->
+    <template if:true={isDraftStage}>
+        <div class="slds-box slds-theme_shade">
+            <h3 class="slds-text-heading_medium slds-m-bottom_medium">Loan Application Details</h3>
+            
+            <div class="slds-grid slds-wrap slds-gutters">
+                <!-- Loan Amount -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-input
+                        type="number"
+                        label="Loan Amount Requested"
+                        value={localApplicationData.Amount_Requested__c}
+                        formatter="currency"
+                        min="1000"
+                        max="100000"
+                        step="100"
+                        required
+                        disabled={isReadOnly}
+                        onchange={handleAmountChange}>
+                    </lightning-input>
+                </div>
+                
+                <!-- Loan Purpose -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-combobox
+                        label="Loan Purpose"
+                        value={localApplicationData.Purpose__c}
+                        options={purposeOptions}
+                        required
+                        disabled={isReadOnly}
+                        onchange={handlePurposeChange}>
+                    </lightning-combobox>
+                </div>
+                
+                <!-- Loan Term -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-combobox
+                        label="Loan Term"
+                        value={localApplicationData.Term_Months__c}
+                        options={termOptions}
+                        required
+                        disabled={isReadOnly}
+                        onchange={handleTermChange}>
+                    </lightning-combobox>
+                </div>
+            </div>
+            
+            <!-- Applicant Information -->
+            <h3 class="slds-text-heading_medium slds-m-top_large slds-m-bottom_medium">Applicant Information</h3>
+            
+            <div class="slds-grid slds-wrap slds-gutters">
+                <!-- Name -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-input
+                        type="text"
+                        label="Full Name"
+                        value={localApplicationData.Applicant_Profile__r.Name}
+                        required
+                        disabled={isReadOnly}
+                        data-field="Name"
+                        onchange={handleApplicantFieldChange}>
+                    </lightning-input>
+                </div>
+                
+                <!-- Email -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-input
+                        type="email"
+                        label="Email Address"
+                        value={localApplicationData.Applicant_Profile__r.Email__c}
+                        required
+                        disabled={isReadOnly}
+                        data-field="Email__c"
+                        onchange={handleApplicantFieldChange}>
+                    </lightning-input>
+                </div>
+                
+                <!-- Phone -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-input
+                        type="tel"
+                        label="Phone Number"
+                        value={localApplicationData.Applicant_Profile__r.Phone__c}
+                        pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+                        disabled={isReadOnly}
+                        data-field="Phone__c"
+                        onchange={handleApplicantFieldChange}>
+                    </lightning-input>
+                </div>
+                
+                <!-- Employment Status -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-combobox
+                        label="Employment Status"
+                        value={localApplicationData.Applicant_Profile__r.Employment_Status__c}
+                        options={employmentOptions}
+                        disabled={isReadOnly}
+                        onchange={handleEmploymentChange}>
+                    </lightning-combobox>
+                </div>
+                
+                <!-- Annual Income (Internal Users Only) -->
+                <template if:true={showInternalFields}>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                        <lightning-input
+                            type="number"
+                            label="Annual Income"
+                            value={localApplicationData.Applicant_Profile__r.Total_Income__c}
+                            formatter="currency"
+                            disabled={isReadOnly}
+                            data-field="Total_Income__c"
+                            onchange={handleApplicantFieldChange}>
+                        </lightning-input>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+    
+    <!-- Submitted/Under Review Stage -->
+    <template if:true={isSubmittedStage}>
+        <div class="slds-box">
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                <h3 class="slds-text-heading_medium">Application Under Review</h3>
+                <span class={statusClass}>{applicationData.Status__c}</span>
+            </div>
+            
+            <p class="slds-text-body_regular slds-m-bottom_medium">
+                Your application is being reviewed by our team. You will be notified once a decision is made.
+            </p>
+            
+            <dl class="slds-dl_horizontal">
+                <dt class="slds-dl_horizontal__label">Application ID:</dt>
+                <dd class="slds-dl_horizontal__detail">{applicationData.Name}</dd>
+                
+                <dt class="slds-dl_horizontal__label">Amount Requested:</dt>
+                <dd class="slds-dl_horizontal__detail">{formattedAmount}</dd>
+                
+                <dt class="slds-dl_horizontal__label">Purpose:</dt>
+                <dd class="slds-dl_horizontal__detail">{applicationData.Purpose__c}</dd>
+                
+                <dt class="slds-dl_horizontal__label">Term:</dt>
+                <dd class="slds-dl_horizontal__detail">{applicationData.Term_Months__c} months</dd>
+                
+                <dt class="slds-dl_horizontal__label">Submission Date:</dt>
+                <dd class="slds-dl_horizontal__detail">{applicationData.Application_Date__c}</dd>
+            </dl>
+            
+            <!-- Document Upload Section -->
+            <template if:true={showDocumentUpload}>
+                <div class="slds-m-top_large">
+                    <h4 class="slds-text-heading_small slds-m-bottom_small">Required Documents</h4>
+                    <lightning-file-upload
+                        label="Upload Supporting Documents"
+                        name="documentUploader"
+                        accept=".pdf,.png,.jpg,.jpeg"
+                        record-id={applicationData.Id}
+                        multiple>
+                    </lightning-file-upload>
+                </div>
+            </template>
+        </div>
+    </template>
+    
+    <!-- Underwriting Stage -->
+    <template if:true={isUnderwritingStage}>
+        <div class="slds-box">
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                <h3 class="slds-text-heading_medium">In Underwriting</h3>
+                <span class={statusClass}>{applicationData.Status__c}</span>
+            </div>
+            
+            <div class="slds-progress-ring_container">
+                <div class="slds-progress-ring">
+                    <div class="slds-progress-ring__progress" role="progressbar" 
+                         aria-valuemin="0" aria-valuemax="100" aria-valuenow="65">
+                        <svg viewBox="-1 -1 2 2">
+                            <circle class="slds-progress-ring__path" cx="0" cy="0" r="1"></circle>
+                        </svg>
+                    </div>
+                    <div class="slds-progress-ring__content">65%</div>
+                </div>
+            </div>
+            
+            <p class="slds-text-body_regular slds-m-top_medium">
+                Our underwriting team is carefully reviewing your application. This typically takes 1-2 business days.
+            </p>
+        </div>
+    </template>
+    
+    <!-- Decision Stage -->
+    <template if:true={isDecisionStage}>
+        <div class="slds-box">
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                <h3 class="slds-text-heading_medium">Decision</h3>
+                <span class={statusClass}>{applicationData.Status__c}</span>
+            </div>
+            
+            <!-- Approved -->
+            <template if:true={isApproved}>
+                <div class="slds-scoped-notification slds-media slds-media_center slds-theme_success">
+                    <div class="slds-media__figure">
+                        <lightning-icon icon-name="utility:success" variant="inverse" size="small"></lightning-icon>
+                    </div>
+                    <div class="slds-media__body">
+                        <p>Congratulations! Your loan application has been approved.</p>
+                    </div>
+                </div>
+                
+                <dl class="slds-dl_horizontal slds-m-top_medium">
+                    <dt class="slds-dl_horizontal__label">Approved Amount:</dt>
+                    <dd class="slds-dl_horizontal__detail">{formattedApprovedAmount}</dd>
+                    
+                    <dt class="slds-dl_horizontal__label">Interest Rate:</dt>
+                    <dd class="slds-dl_horizontal__detail">{applicationData.Interest_Rate__c}%</dd>
+                    
+                    <dt class="slds-dl_horizontal__label">Term:</dt>
+                    <dd class="slds-dl_horizontal__detail">{applicationData.Term_Months__c} months</dd>
+                    
+                    <dt class="slds-dl_horizontal__label">Monthly Payment:</dt>
+                    <dd class="slds-dl_horizontal__detail">{formattedMonthlyPayment}</dd>
+                </dl>
+            </template>
+            
+            <!-- Declined -->
+            <template if:true={isDeclined}>
+                <div class="slds-scoped-notification slds-media slds-media_center slds-theme_error">
+                    <div class="slds-media__figure">
+                        <lightning-icon icon-name="utility:error" variant="inverse" size="small"></lightning-icon>
+                    </div>
+                    <div class="slds-media__body">
+                        <p>We're sorry, but we're unable to approve your application at this time.</p>
+                    </div>
+                </div>
+                
+                <div class="slds-m-top_medium">
+                    <p class="slds-text-body_regular">{declineMessage}</p>
+                    <p class="slds-text-body_small slds-m-top_small">
+                        You may reapply after 90 days or contact our support team for more information.
+                    </p>
+                </div>
+            </template>
+        </div>
+    </template>
+    
+    <!-- Funded Stage -->
+    <template if:true={isFundedStage}>
+        <div class="slds-box">
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                <h3 class="slds-text-heading_medium">Loan Funded</h3>
+                <span class="slds-badge slds-theme_success">Funded</span>
+            </div>
+            
+            <div class="slds-scoped-notification slds-media slds-media_center slds-theme_success">
+                <div class="slds-media__figure">
+                    <lightning-icon icon-name="utility:check" variant="inverse" size="small"></lightning-icon>
+                </div>
+                <div class="slds-media__body">
+                    <p>Your loan has been successfully funded!</p>
+                </div>
+            </div>
+            
+            <dl class="slds-dl_horizontal slds-m-top_medium">
+                <dt class="slds-dl_horizontal__label">Loan Amount:</dt>
+                <dd class="slds-dl_horizontal__detail">{formattedApprovedAmount}</dd>
+                
+                <dt class="slds-dl_horizontal__label">Interest Rate:</dt>
+                <dd class="slds-dl_horizontal__detail">{applicationData.Interest_Rate__c}%</dd>
+                
+                <dt class="slds-dl_horizontal__label">Monthly Payment:</dt>
+                <dd class="slds-dl_horizontal__detail">{formattedMonthlyPayment}</dd>
+                
+                <dt class="slds-dl_horizontal__label">First Payment Due:</dt>
+                <dd class="slds-dl_horizontal__detail">30 days from funding date</dd>
+            </dl>
+        </div>
+    </template>
+</template>

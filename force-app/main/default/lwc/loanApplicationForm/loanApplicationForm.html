@@ -1,0 +1,139 @@
+<template>
+    <lightning-card title="Loan Application" icon-name="standard:product_request">
+        <div class="slds-m-around_medium">
+            <lightning-spinner if:true={isLoading} alternative-text="Processing..."></lightning-spinner>
+            
+            <!-- Error Message -->
+            <div if:true={errorMessage} class="slds-m-bottom_medium">
+                <div class="slds-notify slds-notify_alert slds-alert_error">
+                    <span class="slds-assistive-text">Error</span>
+                    <h2>{errorMessage}</h2>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div if:true={successMessage} class="slds-m-bottom_medium">
+                <div class="slds-notify slds-notify_alert slds-alert_success">
+                    <span class="slds-assistive-text">Success</span>
+                    <h2>{successMessage}</h2>
+                </div>
+            </div>
+
+            <!-- Application Form -->
+            <lightning-record-edit-form 
+                object-api-name={objectApiName}
+                record-id={recordId}
+                onsubmit={handleSubmit}
+                onsuccess={handleSuccess}
+                onerror={handleError}>
+                
+                <div class="slds-grid slds-wrap">
+                    <!-- Basic Information -->
+                    <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                        <h3 class="slds-text-heading_small slds-m-bottom_small">Loan Information</h3>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-p-right_small">
+                        <lightning-input-field field-name="Amount_Requested__c" required></lightning-input-field>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_small">
+                        <lightning-input-field field-name="Term_Months__c" required></lightning-input-field>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-1">
+                        <lightning-input-field field-name="Purpose__c" required></lightning-input-field>
+                    </div>
+
+                    <!-- Applicant Information -->
+                    <div class="slds-col slds-size_1-of-1 slds-m-top_large slds-m-bottom_medium">
+                        <h3 class="slds-text-heading_small slds-m-bottom_small">Applicant Information</h3>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-p-right_small">
+                        <lightning-input 
+                            type="text" 
+                            label="Full Name" 
+                            value={applicantName}
+                            onchange={handleApplicantFieldChange}
+                            data-field="Name"
+                            required>
+                        </lightning-input>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_small">
+                        <lightning-input 
+                            type="email" 
+                            label="Email" 
+                            value={applicantEmail}
+                            onchange={handleApplicantFieldChange}
+                            data-field="Email__c"
+                            required>
+                        </lightning-input>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-p-right_small">
+                        <lightning-input 
+                            type="tel" 
+                            label="Phone" 
+                            value={applicantPhone}
+                            onchange={handleApplicantFieldChange}
+                            data-field="Phone__c">
+                        </lightning-input>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_small">
+                        <lightning-input 
+                            type="number" 
+                            label="Annual Income" 
+                            value={applicantIncome}
+                            onchange={handleApplicantFieldChange}
+                            data-field="Total_Income__c"
+                            formatter="currency">
+                        </lightning-input>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-p-right_small">
+                        <lightning-combobox
+                            name="employmentStatus"
+                            label="Employment Status"
+                            value={applicantEmployment}
+                            placeholder="Select Employment Status"
+                            options={employmentOptions}
+                            onchange={handleApplicantFieldChange}
+                            data-field="Employment_Status__c">
+                        </lightning-combobox>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-2 slds-p-left_small">
+                        <lightning-input 
+                            type="date" 
+                            label="Date of Birth" 
+                            value={applicantDOB}
+                            onchange={handleApplicantFieldChange}
+                            data-field="Date_of_Birth__c">
+                        </lightning-input>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="slds-m-top_large">
+                    <lightning-button 
+                        class="slds-m-right_small" 
+                        type="button" 
+                        label="Save Draft" 
+                        onclick={handleSaveDraft}
+                        disabled={isLoading}>
+                    </lightning-button>
+                    
+                    <lightning-button 
+                        type="submit" 
+                        label="Submit Application" 
+                        variant="brand"
+                        disabled={isLoading}>
+                    </lightning-button>
+                </div>
+            </lightning-record-edit-form>
+        </div>
+    </lightning-card>
+</template>

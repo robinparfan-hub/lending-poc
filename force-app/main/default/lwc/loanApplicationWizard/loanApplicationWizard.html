@@ -1,0 +1,113 @@
+<template>
+    <lightning-card title="Loan Application" icon-name="standard:approval">
+        <!-- Progress Indicator -->
+        <div class="slds-m-around_medium">
+            <div class="slds-progress">
+                <ol class="slds-progress__list">
+                    <template for:each={stagesWithClasses} for:item="stage">
+                        <li key={stage.value} 
+                            class={stage.class}
+                            data-stage={stage.value}>
+                            <lightning-icon 
+                                icon-name={stage.iconName}
+                                size="x-small"
+                                alternative-text={stage.label}>
+                            </lightning-icon>
+                            <span class="slds-assistive-text">{stage.label}</span>
+                        </li>
+                    </template>
+                </ol>
+                <div class="slds-progress-bar">
+                    <span class="slds-progress-bar__value" 
+                          style={progressBarStyle}>
+                        <span class="slds-assistive-text">Progress: {progressPercent}%</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <lightning-spinner 
+                alternative-text="Loading"
+                size="medium">
+            </lightning-spinner>
+        </template>
+        
+        <!-- Error Message -->
+        <template if:true={error}>
+            <div class="slds-m-around_medium">
+                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                    <lightning-icon 
+                        icon-name="utility:error"
+                        variant="error"
+                        size="small"
+                        class="slds-m-right_small">
+                    </lightning-icon>
+                    <span>{error}</span>
+                </div>
+            </div>
+        </template>
+        
+        <!-- Main Content Area -->
+        <template if:false={isLoading}>
+            <template if:true={hasAccess}>
+                <div class="slds-m-around_medium">
+                    <!-- Application Stage Component -->
+                    <c-loan-application-stage
+                        application-data={applicationData}
+                        current-stage={currentStage}
+                        is-external-user={isExternalUser}
+                        is-read-only={isReadOnly}
+                        onstagechange={handleStageChange}>
+                    </c-loan-application-stage>
+                    
+                    <!-- Loan Offer Acceptance Component (for approved applications) -->
+                    <template if:true={showAcceptanceComponent}>
+                        <div class="slds-m-top_large">
+                            <c-loan-offer-acceptance
+                                application-id={recordId}
+                                approved-amount={applicationData.Approved_Amount__c}
+                                interest-rate={applicationData.Interest_Rate__c}
+                                term-months={applicationData.Term_Months__c}
+                                monthly-payment={applicationData.Monthly_Payment__c}
+                                onofferaccepted={handleOfferAccepted}
+                                onofferdeclined={handleOfferDeclined}>
+                            </c-loan-offer-acceptance>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </template>
+        
+        <!-- Footer Actions -->
+        <template if:false={isLoading}>
+            <div slot="footer">
+                <template if:true={hasAccess}>
+                    <lightning-button-group>
+                        <template if:false={isReadOnly}>
+                            <lightning-button 
+                                label="Save Draft"
+                                onclick={handleSaveDraft}
+                                disabled={isLoading}>
+                            </lightning-button>
+                            <lightning-button 
+                                label="Submit Application"
+                                variant="brand"
+                                onclick={handleSubmit}
+                                disabled={isLoading}>
+                            </lightning-button>
+                        </template>
+                        <template if:true={isReadOnly}>
+                            <lightning-button 
+                                label="Refresh"
+                                onclick={loadApplication}
+                                disabled={isLoading}>
+                            </lightning-button>
+                        </template>
+                    </lightning-button-group>
+                </template>
+            </div>
+        </template>
+    </lightning-card>
+</template>

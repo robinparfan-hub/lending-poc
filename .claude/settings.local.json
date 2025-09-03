@@ -18,6 +18,7 @@
       "Bash(git push:*)",
       "mcp__notion__search",
       "mcp__notion__fetch",
+      "mcp__render__*",
       "Bash(sf project deploy:*)",
       "Bash(sf org open:*)",
       "Bash(tree:*)",
@@ -34,7 +35,14 @@
       "Bash(sf apex run test:*)",
       "Bash(sf apex get test:*)",
       "Bash(sf apex run:*)",
-      "Bash(sf sobject describe:*)"
+      "Bash(sf sobject describe:*)",
+      "Bash(npm start)",
+      "Bash(curl:*)",
+      "Bash(./service-status.sh)",
+      "Bash(sed:*)",
+      "Bash(lsof:*)",
+      "Bash(/Users/robinparfan/projects/lending-poc/external-services/service-status.sh)",
+      "Bash(sf apex get log:*)"
     ],
     "deny": [],
     "ask": []
