@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Valid_Interest_Rate</fullName>
+    <active>true</active>
+    <description>Ensures interest rate is between 3% and 36%</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Interest_Rate__c)),
+    OR(
+        Interest_Rate__c &lt; 0.03,
+        Interest_Rate__c &gt; 0.36
+    )
+)</errorConditionFormula>
+    <errorDisplayField>Interest_Rate__c</errorDisplayField>
+    <errorMessage>Interest rate must be between 3% and 36%</errorMessage>
+</ValidationRule>

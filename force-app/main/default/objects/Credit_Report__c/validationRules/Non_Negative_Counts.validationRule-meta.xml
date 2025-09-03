@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Non_Negative_Counts</fullName>
+    <active>true</active>
+    <description>Ensures inquiry and trade line counts are not negative</description>
+    <errorConditionFormula>OR(
+    AND(NOT(ISBLANK(Inquiry_Count__c)), Inquiry_Count__c &lt; 0),
+    AND(NOT(ISBLANK(Trade_Line_Count__c)), Trade_Line_Count__c &lt; 0)
+)</errorConditionFormula>
+    <errorMessage>Inquiry count and trade line count cannot be negative</errorMessage>
+</ValidationRule>

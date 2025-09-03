@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Valid_Age</fullName>
+    <active>true</active>
+    <description>Ensures applicant is 18+ years old based on Date of Birth</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Date_of_Birth__c)),
+    Date_of_Birth__c &gt; TODAY() - (18 * 365)
+)</errorConditionFormula>
+    <errorDisplayField>Date_of_Birth__c</errorDisplayField>
+    <errorMessage>Applicant must be at least 18 years old</errorMessage>
+</ValidationRule>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Interest_Rate__c</fullName>
+    <description>The annual interest rate for the loan</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Enter the annual interest rate as a percentage (e.g., 5.5 for 5.5%)</inlineHelpText>
+    <label>Interest Rate</label>
+    <precision>5</precision>
+    <required>false</required>
+    <scale>3</scale>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Percent</type>
+    <unique>false</unique>
+</CustomField>

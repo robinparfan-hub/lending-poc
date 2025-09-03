@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Trade_Line_Count__c</fullName>
+    <description>Number of trade lines (credit accounts) in the report</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Enter the number of trade lines shown on the credit report</inlineHelpText>
+    <label>Trade Line Count</label>
+    <precision>3</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

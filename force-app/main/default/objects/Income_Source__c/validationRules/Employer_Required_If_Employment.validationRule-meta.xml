@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Employer_Required_If_Employment</fullName>
+    <active>true</active>
+    <description>Requires employer name if income type is Employment</description>
+    <errorConditionFormula>AND(
+    ISPICKVAL(Type__c, "Employment"),
+    ISBLANK(Employer_Name__c)
+)</errorConditionFormula>
+    <errorDisplayField>Employer_Name__c</errorDisplayField>
+    <errorMessage>Employer name is required when income type is Employment</errorMessage>
+</ValidationRule>

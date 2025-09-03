@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Verified_Status_Logic</fullName>
+    <active>true</active>
+    <description>Ensures if Is_Verified is true, Status must be Verified</description>
+    <errorConditionFormula>AND(
+    Is_Verified__c = TRUE,
+    NOT(ISPICKVAL(Status__c, "Verified"))
+)</errorConditionFormula>
+    <errorDisplayField>Status__c</errorDisplayField>
+    <errorMessage>If document is marked as verified, status must be Verified</errorMessage>
+</ValidationRule>

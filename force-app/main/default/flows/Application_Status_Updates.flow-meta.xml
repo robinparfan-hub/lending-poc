@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>64.0</apiVersion>
+    <description>Automatically updates loan application status based on business logic and sends notifications</description>
+    <environments>Default</environments>
+    <interviewLabel>Application Status Updates {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Application Status Updates</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_Credit_Report</name>
+        <label>Get Credit Report</label>
+        <locationX>176</locationX>
+        <locationY>335</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Check_Credit_Score</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Loan_Application__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Credit_Report__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <name>Update_to_Under_Review</name>
+        <label>Update to Under Review</label>
+        <locationX>50</locationX>
+        <locationY>455</locationY>
+        <inputAssignments>
+            <field>Status__c</field>
+            <value>
+                <stringValue>Under Review</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Update_to_Pre_Approved</name>
+        <label>Update to Pre-Approved</label>
+        <locationX>314</locationX>
+        <locationY>455</locationY>
+        <inputAssignments>
+            <field>Status__c</field>
+            <value>
+                <stringValue>Pre-Approved</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <decisions>
+        <name>Check_Credit_Score</name>
+        <label>Check Credit Score</label>
+        <locationX>176</locationX>
+        <locationY>455</locationY>
+        <defaultConnector>
+            <targetReference>Update_to_Under_Review</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Low Credit Score</defaultConnectorLabel>
+        <rules>
+            <name>Good_Credit_Score</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Credit_Report.Credit_Score__c</leftValueReference>
+                <operator>GreaterThanOrEqualTo</operator>
+                <rightValue>
+                    <numberValue>650.0</numberValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_to_Pre_Approved</targetReference>
+            </connector>
+            <label>Good Credit Score</label>
+        </rules>
+    </decisions>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_Credit_Report</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Status__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Submitted</stringValue>
+            </value>
+        </filters>
+        <object>Loan_Application__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Draft</status>
+</Flow>

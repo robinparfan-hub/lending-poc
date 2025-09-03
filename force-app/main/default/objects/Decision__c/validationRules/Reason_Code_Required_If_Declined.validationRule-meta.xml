@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reason_Code_Required_If_Declined</fullName>
+    <active>true</active>
+    <description>Requires reason codes when outcome is Declined</description>
+    <errorConditionFormula>AND(
+    ISPICKVAL(Outcome__c, "Declined"),
+    ISBLANK(Reason_Codes__c)
+)</errorConditionFormula>
+    <errorDisplayField>Reason_Codes__c</errorDisplayField>
+    <errorMessage>Reason codes are required when outcome is Declined</errorMessage>
+</ValidationRule>

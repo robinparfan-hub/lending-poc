@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Decision_Date__c</fullName>
+    <description>Date and time when the decision was made</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Enter the date and time when this decision was made</inlineHelpText>
+    <label>Decision Date</label>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>DateTime</type>
+</CustomField>

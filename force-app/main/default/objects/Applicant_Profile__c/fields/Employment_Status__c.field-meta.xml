@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Employment_Status__c</fullName>
+    <description>Current employment status of the applicant</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Select the applicant's current employment status</inlineHelpText>
+    <label>Employment Status</label>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Employed</fullName>
+                <default>false</default>
+                <label>Employed</label>
+            </value>
+            <value>
+                <fullName>Self-Employed</fullName>
+                <default>false</default>
+                <label>Self-Employed</label>
+            </value>
+            <value>
+                <fullName>Retired</fullName>
+                <default>false</default>
+                <label>Retired</label>
+            </value>
+            <value>
+                <fullName>Unemployed</fullName>
+                <default>false</default>
+                <label>Unemployed</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

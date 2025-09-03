@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Valid_Email_Format</fullName>
+    <active>true</active>
+    <description>Ensures email format contains @ and dot</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Email__c)),
+    OR(
+        NOT(CONTAINS(Email__c, "@")),
+        NOT(CONTAINS(Email__c, ".")),
+        NOT(CONTAINS(RIGHT(Email__c, LEN(Email__c) - FIND("@", Email__c)), "."))
+    )
+)</errorConditionFormula>
+    <errorDisplayField>Email__c</errorDisplayField>
+    <errorMessage>Please enter a valid email address with @ and domain</errorMessage>
+</ValidationRule>

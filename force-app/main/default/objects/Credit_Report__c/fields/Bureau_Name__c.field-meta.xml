@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Bureau_Name__c</fullName>
+    <description>Credit bureau that provided the report</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Select the credit bureau that provided this report</inlineHelpText>
+    <label>Bureau Name</label>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Equifax</fullName>
+                <default>false</default>
+                <label>Equifax</label>
+            </value>
+            <value>
+                <fullName>Experian</fullName>
+                <default>false</default>
+                <label>Experian</label>
+            </value>
+            <value>
+                <fullName>TransUnion</fullName>
+                <default>false</default>
+                <label>TransUnion</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

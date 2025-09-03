@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Decision_Type__c</fullName>
+    <description>Type of decision made</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Select the type of decision made</inlineHelpText>
+    <label>Decision Type</label>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Manual</fullName>
+                <default>false</default>
+                <label>Manual</label>
+            </value>
+            <value>
+                <fullName>Automated</fullName>
+                <default>false</default>
+                <label>Automated</label>
+            </value>
+            <value>
+                <fullName>Override</fullName>
+                <default>false</default>
+                <label>Override</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

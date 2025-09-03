@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>64.0</apiVersion>
+    <description>Evaluates credit score and sets risk level for loan applications</description>
+    <environments>Default</environments>
+    <interviewLabel>Credit Score Evaluation {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Credit Score Evaluation</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordUpdates>
+        <name>Update_Risk_High</name>
+        <label>Update Risk High</label>
+        <locationX>50</locationX>
+        <locationY>455</locationY>
+        <inputAssignments>
+            <field>Risk_Assessment__c</field>
+            <value>
+                <stringValue>High Risk</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Update_Risk_Medium</name>
+        <label>Update Risk Medium</label>
+        <locationX>314</locationX>
+        <locationY>455</locationY>
+        <inputAssignments>
+            <field>Risk_Assessment__c</field>
+            <value>
+                <stringValue>Medium Risk</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Update_Risk_Low</name>
+        <label>Update Risk Low</label>
+        <locationX>578</locationX>
+        <locationY>455</locationY>
+        <inputAssignments>
+            <field>Risk_Assessment__c</field>
+            <value>
+                <stringValue>Low Risk</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <decisions>
+        <name>Evaluate_Credit_Score</name>
+        <label>Evaluate Credit Score</label>
+        <locationX>314</locationX>
+        <locationY>335</locationY>
+        <defaultConnector>
+            <targetReference>Update_Risk_High</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Poor Credit (&lt;600)</defaultConnectorLabel>
+        <rules>
+            <name>Excellent_Credit</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Credit_Score__c</leftValueReference>
+                <operator>GreaterThanOrEqualTo</operator>
+                <rightValue>
+                    <numberValue>750.0</numberValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_Risk_Low</targetReference>
+            </connector>
+            <label>Excellent Credit (750+)</label>
+        </rules>
+        <rules>
+            <name>Good_Credit</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Credit_Score__c</leftValueReference>
+                <operator>GreaterThanOrEqualTo</operator>
+                <rightValue>
+                    <numberValue>600.0</numberValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Credit_Score__c</leftValueReference>
+                <operator>LessThan</operator>
+                <rightValue>
+                    <numberValue>750.0</numberValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_Risk_Medium</targetReference>
+            </connector>
+            <label>Good Credit (600-749)</label>
+        </rules>
+    </decisions>
+    <start>
+        <locationX>188</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Evaluate_Credit_Score</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Credit_Score__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <object>Credit_Report__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Draft</status>
+</Flow>

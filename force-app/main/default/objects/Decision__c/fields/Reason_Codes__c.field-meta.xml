@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reason_Codes__c</fullName>
+    <description>Reason codes for the decision</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Enter the reason codes that influenced this decision</inlineHelpText>
+    <label>Reason Codes</label>
+    <length>32768</length>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>LongTextArea</type>
+    <visibleLines>3</visibleLines>
+</CustomField>

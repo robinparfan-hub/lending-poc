@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Future_Verification_Date</fullName>
+    <active>true</active>
+    <description>Ensures verification date cannot be in the future</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Verification_Date__c)),
+    Verification_Date__c &gt; TODAY()
+)</errorConditionFormula>
+    <errorDisplayField>Verification_Date__c</errorDisplayField>
+    <errorMessage>Verification date cannot be in the future</errorMessage>
+</ValidationRule>

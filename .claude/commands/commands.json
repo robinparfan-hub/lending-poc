@@ -3,19 +3,19 @@
     {
       "name": "sprint-status",
       "description": "Check current sprint progress and status",
-      "script": "sprint-status.sh",
+      "file": "sprint-status.md",
       "aliases": ["status", "sprint"]
     },
     {
-      "name": "sprint-continue",
+      "name": "sprint-continue", 
       "description": "Resume work on the next incomplete task",
-      "script": "sprint-continue.sh",
+      "file": "sprint-continue.md",
       "aliases": ["continue", "next"]
     },
     {
       "name": "sprint-recap",
       "description": "View complete history of all sprint work",
-      "script": "sprint-recap.sh",
+      "file": "sprint-recap.md",
       "aliases": ["recap", "history"]
     }
   ]

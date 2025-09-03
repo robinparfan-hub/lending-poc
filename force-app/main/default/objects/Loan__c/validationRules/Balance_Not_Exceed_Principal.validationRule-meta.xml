@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Balance_Not_Exceed_Principal</fullName>
+    <active>true</active>
+    <description>Ensures current balance does not exceed principal amount</description>
+    <errorConditionFormula>Current_Balance__c &gt; Principal_Amount__c</errorConditionFormula>
+    <errorDisplayField>Current_Balance__c</errorDisplayField>
+    <errorMessage>Current balance cannot exceed the original principal amount</errorMessage>
+</ValidationRule>

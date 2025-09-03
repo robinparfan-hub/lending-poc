@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Valid_Term_Length</fullName>
+    <active>true</active>
+    <description>Ensures term length is 12, 24, 36, 48, or 60 months</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Term_Months__c)),
+    NOT(OR(
+        Term_Months__c = 12,
+        Term_Months__c = 24,
+        Term_Months__c = 36,
+        Term_Months__c = 48,
+        Term_Months__c = 60
+    ))
+)</errorConditionFormula>
+    <errorDisplayField>Term_Months__c</errorDisplayField>
+    <errorMessage>Term must be 12, 24, 36, 48, or 60 months</errorMessage>
+</ValidationRule>

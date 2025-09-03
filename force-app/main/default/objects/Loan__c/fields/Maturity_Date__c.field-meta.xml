@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Maturity_Date__c</fullName>
+    <description>Date when the loan reaches maturity</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Enter the date when this loan reaches maturity</inlineHelpText>
+    <label>Maturity Date</label>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Date</type>
+</CustomField>

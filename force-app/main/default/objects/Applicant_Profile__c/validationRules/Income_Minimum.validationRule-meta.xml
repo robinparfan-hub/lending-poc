@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Income_Minimum</fullName>
+    <active>true</active>
+    <description>Ensures total income is at least $15,000 annually</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Total_Income__c)),
+    Total_Income__c * 12 &lt; 15000
+)</errorConditionFormula>
+    <errorDisplayField>Total_Income__c</errorDisplayField>
+    <errorMessage>Total annual income must be at least $15,000 (minimum $1,250 monthly)</errorMessage>
+</ValidationRule>

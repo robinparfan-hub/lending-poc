@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Future_Application_Date</fullName>
+    <active>true</active>
+    <description>Ensures application date cannot be in the future</description>
+    <errorConditionFormula>Application_Date__c &gt; TODAY()</errorConditionFormula>
+    <errorDisplayField>Application_Date__c</errorDisplayField>
+    <errorMessage>Application date cannot be in the future</errorMessage>
+</ValidationRule>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Status_Transition_Logic</fullName>
+    <active>true</active>
+    <description>Ensures Funded status cannot revert to earlier status</description>
+    <errorConditionFormula>AND(
+    NOT(ISNEW()),
+    PRIORVALUE(Status__c) = "Funded",
+    NOT(OR(
+        ISPICKVAL(Status__c, "Funded"),
+        ISPICKVAL(Status__c, "Cancelled")
+    ))
+)</errorConditionFormula>
+    <errorDisplayField>Status__c</errorDisplayField>
+    <errorMessage>Once funded, application can only be cancelled or remain funded</errorMessage>
+</ValidationRule>

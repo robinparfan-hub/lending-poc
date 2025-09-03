@@ -53,10 +53,6 @@
   - [ ] Fields: Loan Number, Disbursement Date, Principal, Balance
   - [ ] Payment schedule calculations
   
-- [ ] Create **Payment__c**
-  - [ ] Fields: Payment Date, Amount, Principal, Interest, Status
-  - [ ] Late fee calculations
-  
 - [ ] Create **Document__c**
   - [ ] Fields: Type, Status, Verification Status, S3 Link
   - [ ] File attachment configuration
@@ -68,7 +64,6 @@
 - [ ] Configure Lookups: Income Source → Applicant Profile
 - [ ] Configure Lookups: Credit Report → Loan Application
 - [ ] Configure Lookups: Decision → Loan Application
-- [ ] Configure Master-Detail: Payment → Loan
 - [ ] Create Junction Objects (if needed)
 - [ ] Set up Roll-up Summary fields
 
@@ -136,7 +131,7 @@
 - [ ] Schedule demo session
 
 ## 📊 Success Metrics
-- [ ] All 8 core objects created and deployed
+- [ ] All 7 core objects created and deployed
 - [ ] Relationships properly configured
 - [ ] Basic automation working (flows/processes)
 - [ ] Page layouts optimized for user roles
@@ -152,7 +147,7 @@
 | Test data | ⏳ Day 5 Task | Use data loader if needed |
 
 ## 📝 Deliverables Checklist
-- [ ] 8 Custom Objects with fields and relationships
+- [ ] 7 Custom Objects with fields and relationships
 - [ ] 3-4 Page Layouts per key object
 - [ ] Lightning App with navigation
 - [ ] 5+ Automation processes (Flows/PB)

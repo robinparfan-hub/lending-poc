@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Non_Negative_Debt</fullName>
+    <active>true</active>
+    <description>Ensures total debt is not negative</description>
+    <errorConditionFormula>AND(
+    NOT(ISBLANK(Total_Debt__c)),
+    Total_Debt__c &lt; 0
+)</errorConditionFormula>
+    <errorDisplayField>Total_Debt__c</errorDisplayField>
+    <errorMessage>Total debt cannot be negative</errorMessage>
+</ValidationRule>

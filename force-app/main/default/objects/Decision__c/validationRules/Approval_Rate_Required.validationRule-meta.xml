@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Approval_Rate_Required</fullName>
+    <active>true</active>
+    <description>Requires approved rate when outcome is Approved</description>
+    <errorConditionFormula>AND(
+    ISPICKVAL(Outcome__c, "Approved"),
+    ISBLANK(Approved_Rate__c)
+)</errorConditionFormula>
+    <errorDisplayField>Approved_Rate__c</errorDisplayField>
+    <errorMessage>Approved interest rate is required when outcome is Approved</errorMessage>
+</ValidationRule>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Type__c</fullName>
+    <description>Type of income source</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Select the type of income source</inlineHelpText>
+    <label>Type</label>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Employment</fullName>
+                <default>false</default>
+                <label>Employment</label>
+            </value>
+            <value>
+                <fullName>Self-Employment</fullName>
+                <default>false</default>
+                <label>Self-Employment</label>
+            </value>
+            <value>
+                <fullName>Investment</fullName>
+                <default>false</default>
+                <label>Investment</label>
+            </value>
+            <value>
+                <fullName>Benefits</fullName>
+                <default>false</default>
+                <label>Benefits</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

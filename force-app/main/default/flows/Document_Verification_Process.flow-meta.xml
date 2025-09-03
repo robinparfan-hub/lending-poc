@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>64.0</apiVersion>
+    <description>Tracks document verification status and updates application status when all documents are verified</description>
+    <environments>Default</environments>
+    <interviewLabel>Document Verification Process {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Document Verification Process</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_All_Documents</name>
+        <label>Get All Documents</label>
+        <locationX>176</locationX>
+        <locationY>335</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Check_All_Verified</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Loan_Application__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Loan_Application__c</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>Document__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <name>Update_Application_Documents_Verified</name>
+        <label>Update Application Documents Verified</label>
+        <locationX>50</locationX>
+        <locationY>575</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Loan_Application__c</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Documents_Verified__c</field>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputAssignments>
+        <object>Loan_Application__c</object>
+    </recordUpdates>
+    <decisions>
+        <name>Check_All_Verified</name>
+        <label>Check All Verified</label>
+        <locationX>176</locationX>
+        <locationY>455</locationY>
+        <defaultConnectorLabel>Not All Verified</defaultConnectorLabel>
+        <rules>
+            <name>All_Documents_Verified</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>AllDocsVerified</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_Application_Documents_Verified</targetReference>
+            </connector>
+            <label>All Documents Verified</label>
+        </rules>
+    </decisions>
+    <formulas>
+        <name>AllDocsVerified</name>
+        <dataType>Boolean</dataType>
+        <expression>true</expression>
+    </formulas>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_All_Documents</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Verification_Status__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Verified</stringValue>
+            </value>
+        </filters>
+        <object>Document__c</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Draft</status>
+</Flow>

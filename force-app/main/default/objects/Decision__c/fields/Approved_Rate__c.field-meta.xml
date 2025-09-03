@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Approved_Rate__c</fullName>
+    <description>Approved interest rate</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Enter the approved interest rate as a percentage</inlineHelpText>
+    <label>Approved Rate</label>
+    <precision>5</precision>
+    <required>false</required>
+    <scale>3</scale>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Percent</type>
+    <unique>false</unique>
+</CustomField>
