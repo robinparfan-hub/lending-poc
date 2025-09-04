@@ -1,0 +1,29 @@
+{
+  "name": "decision-engine-service",
+  "version": "1.0.0",
+  "description": "Decision engine service matching Salesforce Apex mock data for lending POC",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": [
+    "decision",
+    "engine",
+    "lending",
+    "api"
+  ],
+  "author": "Lending POC Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
