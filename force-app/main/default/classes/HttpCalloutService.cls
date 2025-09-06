@@ -21,6 +21,7 @@ public with sharing class HttpCalloutService {
             req.setEndpoint(endpoint);
             req.setMethod('POST');
             req.setHeader('Content-Type', 'application/json');
+            req.setHeader('x-api-key', 'test_key_development_2025'); // Add API key header
             req.setTimeout(DEFAULT_TIMEOUT);
             
             // Set request body
@@ -91,6 +92,7 @@ public with sharing class HttpCalloutService {
             HttpRequest req = new HttpRequest();
             req.setEndpoint(endpoint);
             req.setMethod('GET');
+            req.setHeader('x-api-key', 'test_key_development_2025'); // Add API key header
             req.setTimeout(DEFAULT_TIMEOUT);
             
             // Log request
@@ -149,23 +151,21 @@ public with sharing class HttpCalloutService {
         }
     }
     
-    /**
-     * @description Configuration for external service endpoints
-     * Note: In production, use Named Credentials or Custom Settings
-     */
-    public class EndpointConfig {
-        // For POC, hardcode Render URLs here after deployment
-        // In production, use Named Credentials
-        public static final String DECISION_ENGINE_BASE = 'https://decision-engine-service.onrender.com';
-        public static final String INCOME_SERVICE_BASE = 'https://simple-income-service.onrender.com';
-        
-        // Endpoint paths
-        public static final String EVALUATE_APPLICATION = '/api/v1/evaluate-application';
-        public static final String CREDIT_SCORE = '/api/v1/credit-score';
-        public static final String VERIFY_INCOME = '/api/v1/verify-income';
-        public static final String CALCULATE_DTI = '/api/v1/calculate-dti';
-        public static final String HEALTH = '/health';
-    }
+    // Configuration for external service endpoints
+    // Note: In production, use Named Credentials or Custom Settings
+    
+    // Use Named Credentials for secure API configuration
+    private static final String CREDIT_BUREAU_BASE = 'callout:Credit_Bureau_Service';
+    private static final String DECISION_ENGINE_BASE = 'callout:Decision_Engine_Service';
+    private static final String INCOME_SERVICE_BASE = 'callout:Income_Service';
+    
+    // Endpoint paths
+    private static final String EVALUATE_APPLICATION = '/api/v1/evaluate-application';
+    private static final String CREDIT_SCORE = '/api/v1/credit-score';
+    private static final String CREDIT_CHECK = '/api/v1/credit-check';
+    private static final String VERIFY_INCOME = '/api/v1/verify-income';
+    private static final String CALCULATE_DTI = '/api/v1/calculate-dti';
+    private static final String HEALTH = '/health';
     
     /**
      * @description Call Decision Engine service
@@ -174,7 +174,7 @@ public with sharing class HttpCalloutService {
      */
     @future(callout=true)
     public static void callDecisionEngineAsync(String applicationId) {
-        String endpoint = EndpointConfig.DECISION_ENGINE_BASE + EndpointConfig.EVALUATE_APPLICATION;
+        String endpoint = DECISION_ENGINE_BASE + EVALUATE_APPLICATION;
         Map<String, Object> requestBody = new Map<String, Object>{
             'applicationId' => applicationId
         };
@@ -196,11 +196,53 @@ public with sharing class HttpCalloutService {
      * @return ServiceResponse The income verification response
      */
     public static ServiceResponse verifyIncome(String applicationId) {
-        String endpoint = EndpointConfig.INCOME_SERVICE_BASE + EndpointConfig.VERIFY_INCOME;
+        String endpoint = INCOME_SERVICE_BASE + VERIFY_INCOME;
         Map<String, Object> requestBody = new Map<String, Object>{
             'applicationId' => applicationId
         };
         
         return post(endpoint, requestBody);
+    }
+    
+    /**
+     * @description Call Credit Bureau service for credit check
+     * @param ssn Social Security Number
+     * @param firstName First name
+     * @param lastName Last name
+     * @param dateOfBirth Date of birth
+     * @return ServiceResponse The credit check response
+     */
+    public static ServiceResponse checkCredit(String ssn, String firstName, String lastName, String dateOfBirth) {
+        String endpoint = CREDIT_BUREAU_BASE + CREDIT_CHECK;
+        Map<String, Object> requestBody = new Map<String, Object>{
+            'ssn' => ssn,
+            'firstName' => firstName,
+            'lastName' => lastName,
+            'dateOfBirth' => dateOfBirth
+        };
+        
+        return post(endpoint, requestBody);
+    }
+    
+    /**
+     * @description Call Credit Bureau service for credit score only
+     * @param ssn Social Security Number
+     * @return ServiceResponse The credit score response
+     */
+    public static ServiceResponse getCreditScore(String ssn) {
+        String endpoint = CREDIT_BUREAU_BASE + CREDIT_SCORE;
+        Map<String, Object> requestBody = new Map<String, Object>{
+            'ssn' => ssn
+        };
+        
+        return post(endpoint, requestBody);
+    }
+    
+    /**
+     * @description Test Credit Bureau service health
+     * @return Boolean True if service is healthy
+     */
+    public static Boolean testCreditBureauHealth() {
+        return checkHealth(CREDIT_BUREAU_BASE + HEALTH);
     }
 }

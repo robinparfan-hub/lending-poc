@@ -55,7 +55,7 @@
                     <lightning-input
                         type="text"
                         label="Full Name"
-                        value={localApplicationData.Applicant_Profile__r.Name}
+                        value={applicantName}
                         required
                         disabled={isReadOnly}
                         data-field="Name"
@@ -68,7 +68,7 @@
                     <lightning-input
                         type="email"
                         label="Email Address"
-                        value={localApplicationData.Applicant_Profile__r.Email__c}
+                        value={applicantEmail}
                         required
                         disabled={isReadOnly}
                         data-field="Email__c"
@@ -81,7 +81,7 @@
                     <lightning-input
                         type="tel"
                         label="Phone Number"
-                        value={localApplicationData.Applicant_Profile__r.Phone__c}
+                        value={applicantPhone}
                         pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
                         disabled={isReadOnly}
                         data-field="Phone__c"
@@ -93,11 +93,26 @@
                 <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                     <lightning-combobox
                         label="Employment Status"
-                        value={localApplicationData.Applicant_Profile__r.Employment_Status__c}
+                        value={applicantEmploymentStatus}
                         options={employmentOptions}
                         disabled={isReadOnly}
                         onchange={handleEmploymentChange}>
                     </lightning-combobox>
+                </div>
+                
+                <!-- Date of Birth -->
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-input
+                        type="date"
+                        label="Date of Birth"
+                        value={applicantDOB}
+                        required
+                        disabled={isReadOnly}
+                        data-field="Date_of_Birth__c"
+                        onchange={handleApplicantFieldChange}
+                        max={maxDateOfBirth}
+                        message-when-value-missing="Date of birth is required">
+                    </lightning-input>
                 </div>
                 
                 <!-- Annual Income (Internal Users Only) -->
@@ -106,7 +121,7 @@
                         <lightning-input
                             type="number"
                             label="Annual Income"
-                            value={localApplicationData.Applicant_Profile__r.Total_Income__c}
+                            value={applicantIncome}
                             formatter="currency"
                             disabled={isReadOnly}
                             data-field="Total_Income__c"

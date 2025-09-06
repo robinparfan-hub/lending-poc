@@ -8,7 +8,7 @@
     <length>175</length>
     <maskChar>X</maskChar>
     <maskType>ssn</maskType>
-    <required>true</required>
+    <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <type>EncryptedText</type>

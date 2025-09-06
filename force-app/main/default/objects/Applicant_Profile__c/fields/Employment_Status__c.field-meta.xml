@@ -5,7 +5,7 @@
     <externalId>false</externalId>
     <inlineHelpText>Select the applicant's current employment status</inlineHelpText>
     <label>Employment Status</label>
-    <required>true</required>
+    <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>true</trackHistory>
     <type>Picklist</type>

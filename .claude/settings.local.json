@@ -42,7 +42,8 @@
       "Bash(sed:*)",
       "Bash(lsof:*)",
       "Bash(/Users/robinparfan/projects/lending-poc/external-services/service-status.sh)",
-      "Bash(sf apex get log:*)"
+      "Bash(sf apex get log:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

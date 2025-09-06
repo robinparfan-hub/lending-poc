@@ -152,12 +152,22 @@ export default class LoanApplicationWizard extends LightningElement {
     }
     
     handleStageChange(event) {
+        console.log('handleStageChange called with event:', event.detail);
         const { applicationId, status, eventType, data } = event.detail;
         
         if (eventType === 'save') {
+            console.log('Saving application data');
             this.saveApplicationData(data);
         } else if (eventType === 'submit') {
-            this.submitApplication();
+            console.log('Submitting application with data:', data);
+            // Update application data before submission
+            if (data) {
+                this.applicationData = {
+                    ...this.applicationData,
+                    ...data
+                };
+            }
+            this.submitApplication(this.applicationData);
         } else if (eventType === 'statusChange') {
             this.applicationData.Status__c = status;
             this.determineCurrentStage();
@@ -169,10 +179,27 @@ export default class LoanApplicationWizard extends LightningElement {
         this.isLoading = true;
         this.error = null;
         
-        // Merge updated data
-        const dataToSave = {
+        // Merge updated data first
+        const mergedData = {
             ...this.applicationData,
             ...updatedData
+        };
+        
+        // Transform data for Apex - ensure proper structure
+        const dataToSave = {
+            Id: mergedData.Id || null,
+            Amount_Requested__c: mergedData.Amount_Requested__c,
+            Purpose__c: mergedData.Purpose__c,
+            Term_Months__c: mergedData.Term_Months__c,
+            Status__c: mergedData.Status__c || 'Draft',
+            applicant: mergedData.Applicant_Profile__r ? {
+                Name: mergedData.Applicant_Profile__r.Name || '',
+                Email__c: mergedData.Applicant_Profile__r.Email__c || '',
+                Phone__c: mergedData.Applicant_Profile__r.Phone__c || '',
+                Employment_Status__c: mergedData.Applicant_Profile__r.Employment_Status__c || '',
+                Date_of_Birth__c: mergedData.Applicant_Profile__r.Date_of_Birth__c || null,
+                Total_Income__c: mergedData.Applicant_Profile__r.Total_Income__c || null
+            } : null
         };
         
         saveApplication({ applicationData: dataToSave })
@@ -195,7 +222,15 @@ export default class LoanApplicationWizard extends LightningElement {
             });
     }
     
-    submitApplication() {
+    submitApplication(updatedData) {
+        // Merge updated data if provided
+        if (updatedData) {
+            this.applicationData = {
+                ...this.applicationData,
+                ...updatedData
+            };
+        }
+        
         // Validate before submission
         if (!this.validateApplication()) {
             return;
@@ -203,9 +238,21 @@ export default class LoanApplicationWizard extends LightningElement {
         
         this.isLoading = true;
         
+        // Transform data for Apex - ensure proper structure
         const dataToSave = {
-            ...this.applicationData,
-            Status__c: 'Submitted'
+            Id: this.applicationData.Id || null,
+            Amount_Requested__c: this.applicationData.Amount_Requested__c,
+            Purpose__c: this.applicationData.Purpose__c,
+            Term_Months__c: this.applicationData.Term_Months__c,
+            Status__c: 'Submitted',
+            applicant: this.applicationData.Applicant_Profile__r ? {
+                Name: this.applicationData.Applicant_Profile__r.Name || '',
+                Email__c: this.applicationData.Applicant_Profile__r.Email__c || '',
+                Phone__c: this.applicationData.Applicant_Profile__r.Phone__c || '',
+                Employment_Status__c: this.applicationData.Applicant_Profile__r.Employment_Status__c || '',
+                Date_of_Birth__c: this.applicationData.Applicant_Profile__r.Date_of_Birth__c || null,
+                Total_Income__c: this.applicationData.Applicant_Profile__r.Total_Income__c || null
+            } : null
         };
         
         saveApplication({ applicationData: dataToSave })
@@ -224,8 +271,10 @@ export default class LoanApplicationWizard extends LightningElement {
                 }, 3000);
             })
             .catch(error => {
-                this.error = error.body?.message || 'Error submitting application';
-                this.showToast('Error', this.error, 'error');
+                console.error('Error submitting application:', error);
+                const errorMessage = error.body?.message || error.message || 'Error submitting application';
+                this.error = errorMessage;
+                this.showToast('Error', errorMessage, 'error');
             })
             .finally(() => {
                 this.isLoading = false;
@@ -294,9 +343,19 @@ export default class LoanApplicationWizard extends LightningElement {
     }
     
     handleSubmit() {
+        console.log('handleSubmit called in wizard');
+        this.showToast('Info', 'Submit button clicked - processing...', 'info');
+        
         const stageComponent = this.template.querySelector('c-loan-application-stage');
+        console.log('Stage component found:', stageComponent);
         if (stageComponent) {
+            console.log('Calling handleSubmit on stage component');
             stageComponent.handleSubmit();
+        } else {
+            console.log('Stage component not found!');
+            this.showToast('Warning', 'Unable to find application form component', 'warning');
+            // Try to call submitApplication directly with current data
+            this.submitApplication(this.applicationData);
         }
     }
     

@@ -9,7 +9,7 @@
     <referenceTo>Applicant_Profile__c</referenceTo>
     <relationshipLabel>Loan Applications</relationshipLabel>
     <relationshipName>Loan_Applications</relationshipName>
-    <required>true</required>
+    <required>false</required>
     <trackFeedHistory>true</trackFeedHistory>
     <trackHistory>true</trackHistory>
     <type>Lookup</type>

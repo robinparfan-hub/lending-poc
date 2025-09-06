@@ -172,4 +172,87 @@ router.post('/calculate-dti', [
  */
 router.get('/bank-statements/:accountId', incomeController.getBankStatements);
 
+/**
+ * @swagger
+ * /api/v1/analyze-income-pattern:
+ *   post:
+ *     summary: Analyze income patterns using statistical methods for anomaly detection
+ *     tags: [Income Verification]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - monthlyIncomes
+ *             properties:
+ *               monthlyIncomes:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *                 description: Array of monthly income values (minimum 3 months)
+ *               depositPatterns:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *                 description: Array of deposit counts per month
+ *               employmentMonths:
+ *                 type: number
+ *                 description: Number of months employed
+ *               incomeSource:
+ *                 type: string
+ *                 description: Primary source of income
+ *               expectedIncome:
+ *                 type: number
+ *                 description: Expected/stated monthly income
+ *     responses:
+ *       200:
+ *         description: Income pattern analysis completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     stabilityScore:
+ *                       type: number
+ *                       description: Income stability score (0-100)
+ *                     verificationConfidence:
+ *                       type: string
+ *                       enum: [HIGH, MEDIUM, LOW]
+ *                     anomalies:
+ *                       type: array
+ *                       description: Detected income anomalies
+ *                     fraudIndicators:
+ *                       type: array
+ *                       description: Potential fraud risk indicators
+ *       400:
+ *         description: Insufficient data provided
+ */
+router.post('/analyze-income-pattern', [
+  body('monthlyIncomes')
+    .isArray()
+    .withMessage('Monthly incomes must be an array')
+    .custom(value => value.length >= 3)
+    .withMessage('At least 3 months of income data required'),
+  body('depositPatterns')
+    .optional()
+    .isArray()
+    .withMessage('Deposit patterns must be an array'),
+  body('employmentMonths')
+    .optional()
+    .isNumeric()
+    .withMessage('Employment months must be a number'),
+  body('expectedIncome')
+    .optional()
+    .isNumeric()
+    .withMessage('Expected income must be a number'),
+  validate
+], incomeController.analyzeIncomePattern.bind(incomeController));
+
 module.exports = router;

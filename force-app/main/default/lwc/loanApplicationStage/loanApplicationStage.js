@@ -6,7 +6,9 @@ export default class LoanApplicationStage extends LightningElement {
     @api isExternalUser = false;
     @api isReadOnly = false;
     
-    @track localApplicationData = {};
+    @track localApplicationData = {
+        Applicant_Profile__r: {}
+    };
     @track showDocumentUpload = false;
     
     // Loan purpose options
@@ -41,12 +43,50 @@ export default class LoanApplicationStage extends LightningElement {
     
     // Lifecycle
     connectedCallback() {
-        this.localApplicationData = { ...this.applicationData };
+        // Deep clone the application data to avoid reference issues
+        this.localApplicationData = { 
+            ...this.applicationData,
+            Applicant_Profile__r: {
+                ...(this.applicationData?.Applicant_Profile__r || {})
+            }
+        };
     }
     
     @api
     get applicationDataForSave() {
         return this.localApplicationData;
+    }
+    
+    // Null-safe getters for applicant fields
+    get applicantName() {
+        return this.localApplicationData?.Applicant_Profile__r?.Name || '';
+    }
+    
+    get applicantEmail() {
+        return this.localApplicationData?.Applicant_Profile__r?.Email__c || '';
+    }
+    
+    get applicantPhone() {
+        return this.localApplicationData?.Applicant_Profile__r?.Phone__c || '';
+    }
+    
+    get applicantEmploymentStatus() {
+        return this.localApplicationData?.Applicant_Profile__r?.Employment_Status__c || '';
+    }
+    
+    get applicantIncome() {
+        return this.localApplicationData?.Applicant_Profile__r?.Total_Income__c || null;
+    }
+    
+    get applicantDOB() {
+        return this.localApplicationData?.Applicant_Profile__r?.Date_of_Birth__c || '';
+    }
+    
+    // Calculate max date for DOB (must be 18+ years old)
+    get maxDateOfBirth() {
+        const today = new Date();
+        const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+        return maxDate.toISOString().split('T')[0];
     }
     
     // Computed properties
@@ -152,16 +192,17 @@ export default class LoanApplicationStage extends LightningElement {
     }
     
     handleApplicantFieldChange(event) {
-        const field = event.target.dataset.field;
+        const field = event.currentTarget.dataset.field;
+        const value = event.detail?.value !== undefined ? event.detail.value : event.target.value;
         
         if (!this.localApplicationData.Applicant_Profile__r) {
             this.localApplicationData.Applicant_Profile__r = {};
         }
         
-        if (field === 'Total_Income__c') {
-            this.localApplicationData.Applicant_Profile__r[field] = parseFloat(event.target.value);
+        if (field === 'Total_Income__c' && value) {
+            this.localApplicationData.Applicant_Profile__r[field] = parseFloat(value);
         } else {
-            this.localApplicationData.Applicant_Profile__r[field] = event.target.value;
+            this.localApplicationData.Applicant_Profile__r[field] = value || '';
         }
         
         this.notifyChange('fieldChange');
@@ -184,7 +225,10 @@ export default class LoanApplicationStage extends LightningElement {
         }));
     }
     
+    @api
     handleSubmit() {
+        console.log('handleSubmit called in stage component');
+        console.log('Dispatching stagechange event with data:', this.localApplicationData);
         this.dispatchEvent(new CustomEvent('stagechange', {
             detail: {
                 eventType: 'submit',
@@ -194,13 +238,9 @@ export default class LoanApplicationStage extends LightningElement {
     }
     
     notifyChange(eventType) {
-        // Debounce auto-save
-        clearTimeout(this.saveTimeout);
-        this.saveTimeout = setTimeout(() => {
-            if (eventType === 'fieldChange' && !this.isReadOnly) {
-                this.handleSave();
-            }
-        }, 2000); // Auto-save after 2 seconds of inactivity
+        // Removed auto-save functionality
+        // Field changes now only update local state
+        // User must explicitly click Save Draft or Submit Application
     }
     
     handleDocumentUpload() {

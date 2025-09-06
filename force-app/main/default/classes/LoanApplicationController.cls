@@ -303,6 +303,7 @@ public with sharing class LoanApplicationController {
      * @param applicationData Application data to validate
      */
     private static void validateSubmission(Map<String, Object> applicationData) {
+        // Validate loan fields
         if (applicationData.get('Amount_Requested__c') == null) {
             throw new LoanApplicationException('Loan amount is required');
         }
@@ -311,6 +312,39 @@ public with sharing class LoanApplicationController {
         }
         if (applicationData.get('Term_Months__c') == null) {
             throw new LoanApplicationException('Loan term is required');
+        }
+        
+        // Validate applicant fields for submission
+        // Fix type casting issue - handle the applicant data as a generic Object first
+        Object applicantObj = applicationData.get('applicant');
+        Map<String, Object> applicantData = null;
+        if (applicantObj != null && applicantObj instanceof Map<Object, Object>) {
+            // Convert Map<Object, Object> to Map<String, Object>
+            Map<Object, Object> tempMap = (Map<Object, Object>)applicantObj;
+            applicantData = new Map<String, Object>();
+            for (Object key : tempMap.keySet()) {
+                applicantData.put(String.valueOf(key), tempMap.get(key));
+            }
+        } else if (applicantObj != null) {
+            // Try direct cast if it's already the right type
+            applicantData = (Map<String, Object>)applicantObj;
+        }
+        
+        if (applicantData != null) {
+            if (String.isBlank((String)applicantData.get('Name'))) {
+                throw new LoanApplicationException('Applicant name is required for submission');
+            }
+            if (String.isBlank((String)applicantData.get('Email__c'))) {
+                throw new LoanApplicationException('Email address is required for submission');
+            }
+            if (String.isBlank((String)applicantData.get('Employment_Status__c'))) {
+                throw new LoanApplicationException('Employment status is required for submission');
+            }
+            if (applicantData.get('Date_of_Birth__c') == null) {
+                throw new LoanApplicationException('Date of birth is required for submission');
+            }
+        } else {
+            throw new LoanApplicationException('Applicant information is required for submission');
         }
     }
     
@@ -323,23 +357,70 @@ public with sharing class LoanApplicationController {
         // In production, this would match on email or other unique identifier
         // For now, create a new profile for each application
         
-        Map<String, Object> applicantData = (Map<String, Object>)applicationData.get('applicant');
+        // Fix type casting issue - handle the applicant data as a generic Object first
+        Object applicantObj = applicationData.get('applicant');
+        Map<String, Object> applicantData = null;
+        if (applicantObj != null && applicantObj instanceof Map<Object, Object>) {
+            // Convert Map<Object, Object> to Map<String, Object>
+            Map<Object, Object> tempMap = (Map<Object, Object>)applicantObj;
+            applicantData = new Map<String, Object>();
+            for (Object key : tempMap.keySet()) {
+                applicantData.put(String.valueOf(key), tempMap.get(key));
+            }
+        } else if (applicantObj != null) {
+            // Try direct cast if it's already the right type
+            applicantData = (Map<String, Object>)applicantObj;
+        }
+        
         if (applicantData == null) {
             applicantData = new Map<String, Object>();
         }
         
         Applicant_Profile__c profile = new Applicant_Profile__c();
+        
+        // Set name with fallback
         profile.Name = (String)applicantData.get('Name');
         if (String.isBlank(profile.Name)) {
             profile.Name = 'Guest Applicant ' + DateTime.now().format();
         }
         
-        profile.Email__c = (String)applicantData.get('Email__c');
-        profile.Phone__c = (String)applicantData.get('Phone__c');
-        profile.Total_Income__c = (Decimal)applicantData.get('Total_Income__c');
-        profile.Employment_Status__c = (String)applicantData.get('Employment_Status__c');
-        profile.Date_of_Birth__c = (Date)applicantData.get('Date_of_Birth__c');
-        profile.SSN_Encrypted__c = (String)applicantData.get('SSN_Encrypted__c');
+        // Only set fields that have non-null values
+        String email = (String)applicantData.get('Email__c');
+        if (!String.isBlank(email)) {
+            profile.Email__c = email;
+        }
+        
+        String phone = (String)applicantData.get('Phone__c');
+        if (!String.isBlank(phone)) {
+            profile.Phone__c = phone;
+        }
+        
+        if (applicantData.get('Total_Income__c') != null) {
+            profile.Total_Income__c = (Decimal)applicantData.get('Total_Income__c');
+        }
+        
+        String empStatus = (String)applicantData.get('Employment_Status__c');
+        if (!String.isBlank(empStatus)) {
+            profile.Employment_Status__c = empStatus;
+        }
+        
+        // Handle date conversion carefully
+        if (applicantData.get('Date_of_Birth__c') != null) {
+            String dobString = String.valueOf(applicantData.get('Date_of_Birth__c'));
+            if (!String.isBlank(dobString)) {
+                try {
+                    profile.Date_of_Birth__c = Date.valueOf(dobString);
+                } catch (Exception e) {
+                    // If date parsing fails, leave it null
+                    System.debug('Error parsing Date_of_Birth: ' + e.getMessage());
+                }
+            }
+        }
+        
+        String ssn = (String)applicantData.get('SSN_Encrypted__c');
+        if (!String.isBlank(ssn)) {
+            profile.SSN_Encrypted__c = ssn;
+        }
         
         insert profile;
         return profile.Id;

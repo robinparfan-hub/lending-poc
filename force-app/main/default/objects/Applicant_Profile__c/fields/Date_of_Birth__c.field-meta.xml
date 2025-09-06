@@ -5,7 +5,7 @@
     <externalId>false</externalId>
     <inlineHelpText>Enter the applicant's date of birth</inlineHelpText>
     <label>Date of Birth</label>
-    <required>true</required>
+    <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>true</trackHistory>
     <type>Date</type>

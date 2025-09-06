@@ -43,18 +43,22 @@ test.describe('Lending Console Navigation', () => {
       return;
     }
     
-    // Use frontdoor.jsp to login with the access token
-    const frontdoorUrl = `${instanceUrl}/secur/frontdoor.jsp?sid=${accessToken}&retURL=/lightning/app/Lending_Console`;
+    // Use frontdoor.jsp to login with the access token and go to Lightning home
+    const frontdoorUrl = `${instanceUrl}/secur/frontdoor.jsp?sid=${accessToken}&retURL=/lightning/page/home`;
     
-    console.log('🚀 Logging in and navigating to Lending Console...');
+    console.log('🚀 Logging in and navigating to Lightning home page...');
     await page.goto(frontdoorUrl);
     
-    // Wait for Lightning Experience to load
-    await page.waitForURL('**/lightning/app/**', { 
+    // Wait for Lightning Experience home page to load
+    await page.waitForURL('**/lightning/page/home', { 
       timeout: 30000
     });
     
-    console.log('✅ Successfully logged into Salesforce and opened Lending Console!');
+    console.log('✅ Successfully logged into Salesforce Lightning home page!');
+    
+    // Now navigate to Lending Console
+    console.log('📱 Navigating to Lending Console app...');
+    await page.goto(`${instanceUrl}/lightning/app/c__Lending_Console`);
     
     // Wait for the app to fully load (skip networkidle due to Lightning polling)
     await page.waitForLoadState('domcontentloaded');
@@ -232,10 +236,12 @@ test.describe('Lending Console Navigation', () => {
       return;
     }
     
-    // Login first
-    const frontdoorUrl = `${instanceUrl}/secur/frontdoor.jsp?sid=${accessToken}&retURL=/lightning`;
+    // Login first and go to Lightning home page
+    const frontdoorUrl = `${instanceUrl}/secur/frontdoor.jsp?sid=${accessToken}&retURL=/lightning/page/home`;
     await page.goto(frontdoorUrl);
-    await page.waitForURL('**/lightning/**', { timeout: 30000 });
+    await page.waitForURL('**/lightning/page/home', { timeout: 30000 });
+    
+    console.log('✅ Successfully logged into Salesforce Lightning home page!');
     
     console.log('🔍 Searching for loan applications via SOQL...');
     

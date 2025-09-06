@@ -5,7 +5,7 @@
     <externalId>false</externalId>
     <inlineHelpText>The date this loan application was submitted</inlineHelpText>
     <label>Application Date</label>
-    <required>true</required>
+    <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>true</trackHistory>
     <type>Date</type>
