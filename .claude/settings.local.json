@@ -43,7 +43,13 @@
       "Bash(lsof:*)",
       "Bash(/Users/robinparfan/projects/lending-poc/external-services/service-status.sh)",
       "Bash(sf apex get log:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(sf data query:*)",
+      "Bash(npm install:*)",
+      "Bash(sf project retrieve:*)",
+      "Bash(npx markdown-pdf:*)",
+      "Bash(npx md-to-pdf:*)"
     ],
     "deny": [],
     "ask": []

@@ -245,4 +245,77 @@ public with sharing class HttpCalloutService {
     public static Boolean testCreditBureauHealth() {
         return checkHealth(CREDIT_BUREAU_BASE + HEALTH);
     }
+    
+    /**
+     * @description Call ML-enhanced Decision Engine evaluation
+     * @param applicationId The loan application ID
+     * @param creditScore Credit score of the applicant
+     * @param annualIncome Annual income of the applicant
+     * @param loanAmount Requested loan amount
+     * @param loanPurpose Purpose of the loan
+     * @param employmentStatus Employment status
+     * @param employmentLength Employment length in months
+     * @param debtToIncomeRatio Current DTI ratio
+     * @param previousDefaults Number of previous defaults
+     * @param loanTermMonths Requested loan term in months
+     * @return ServiceResponse The ML evaluation response
+     */
+    public static ServiceResponse callDecisionEngineML(
+        String applicationId,
+        Decimal creditScore,
+        Decimal annualIncome,
+        Decimal loanAmount,
+        String loanPurpose,
+        String employmentStatus,
+        Integer employmentLength,
+        Decimal debtToIncomeRatio,
+        Integer previousDefaults,
+        Integer loanTermMonths
+    ) {
+        String endpoint = DECISION_ENGINE_BASE + ServiceConfigurationHelper.getMLDecisionEngineEndpoint();
+        
+        Map<String, Object> requestBody = new Map<String, Object>{
+            'applicantId' => applicationId,
+            'creditScore' => creditScore,
+            'annualIncome' => annualIncome,
+            'loanAmount' => loanAmount,
+            'loanPurpose' => loanPurpose,
+            'employmentStatus' => employmentStatus,
+            'employmentLength' => employmentLength,
+            'debtToIncomeRatio' => debtToIncomeRatio,
+            'previousDefaults' => previousDefaults,
+            'loanTermMonths' => loanTermMonths
+        };
+        
+        return post(endpoint, requestBody);
+    }
+    
+    /**
+     * @description Call ML Income Pattern Analysis service
+     * @param monthlyIncomes Array of monthly income values
+     * @param depositPatterns Array of deposit counts per month
+     * @param employmentMonths Number of months employed
+     * @param incomeSource Primary source of income
+     * @param expectedIncome Expected/stated monthly income
+     * @return ServiceResponse The income pattern analysis response
+     */
+    public static ServiceResponse callIncomePatternAnalysis(
+        List<Decimal> monthlyIncomes,
+        List<Integer> depositPatterns,
+        Integer employmentMonths,
+        String incomeSource,
+        Decimal expectedIncome
+    ) {
+        String endpoint = INCOME_SERVICE_BASE + ServiceConfigurationHelper.getMLIncomePatternEndpoint();
+        
+        Map<String, Object> requestBody = new Map<String, Object>{
+            'monthlyIncomes' => monthlyIncomes,
+            'depositPatterns' => depositPatterns,
+            'employmentMonths' => employmentMonths,
+            'incomeSource' => incomeSource,
+            'expectedIncome' => expectedIncome
+        };
+        
+        return post(endpoint, requestBody);
+    }
 }

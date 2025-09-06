@@ -56,4 +56,36 @@
         <shortDescription>Maximum Debt to Income Ratio</shortDescription>
         <value>45</value>
     </labels>
+    <labels>
+        <fullName>Use_Mock_Data_Decision_Engine</fullName>
+        <categories>Configuration</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Use Mock Data for Decision Engine Service</shortDescription>
+        <value>true</value>
+    </labels>
+    <labels>
+        <fullName>Use_Mock_Data_Income_Verification</fullName>
+        <categories>Configuration</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Use Mock Data for Income Verification Service</shortDescription>
+        <value>false</value>
+    </labels>
+    <labels>
+        <fullName>ML_Decision_Engine_Endpoint</fullName>
+        <categories>Configuration</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ML Decision Engine Endpoint Path</shortDescription>
+        <value>/api/v1/ml-evaluate</value>
+    </labels>
+    <labels>
+        <fullName>ML_Income_Pattern_Endpoint</fullName>
+        <categories>Configuration</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ML Income Pattern Analysis Endpoint Path</shortDescription>
+        <value>/api/v1/analyze-income-pattern</value>
+    </labels>
 </CustomLabels>

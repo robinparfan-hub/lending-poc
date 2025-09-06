@@ -9,8 +9,8 @@ public with sharing class DecisionEngineService {
     private static Boolean USE_MOCK_DATA {
         get {
             if (USE_MOCK_DATA == null) {
-                String labelValue = System.Label.Use_Mock_Data;
-                USE_MOCK_DATA = (labelValue != null && labelValue.equalsIgnoreCase('true'));
+                // Use ServiceConfigurationHelper for service-specific settings
+                USE_MOCK_DATA = ServiceConfigurationHelper.shouldUseMockData('DecisionEngine');
             }
             return USE_MOCK_DATA;
         }
@@ -238,6 +238,13 @@ public with sharing class DecisionEngineService {
     private static ServiceResponse getAPIDecisionResponse(ServiceRequest request) {
         try {
             String applicationId = request.getStringParameter('applicationId');
+            
+            // Check if ML is enabled for Decision Engine
+            if (ServiceConfigurationHelper.isMLEnabledForDecisionEngine()) {
+                return getMLDecisionResponse(applicationId);
+            }
+            
+            // Otherwise use the original orchestration approach
             Map<String, Object> evaluationResults = new Map<String, Object>();
             
             // Step 1: Get credit evaluation
@@ -259,6 +266,63 @@ public with sharing class DecisionEngineService {
         } catch (Exception e) {
             System.debug('Error in orchestrated evaluation: ' + e.getMessage());
             return ServiceResponse.createError('Orchestrated evaluation failed', ServiceException.INTEGRATION_ERROR);
+        }
+    }
+    
+    /**
+     * @description Get ML-enhanced decision response
+     * @param applicationId The loan application ID
+     * @return ServiceResponse ML decision response
+     */
+    private static ServiceResponse getMLDecisionResponse(String applicationId) {
+        try {
+            // Get application data
+            Loan_Application__c app = [
+                SELECT Id, Amount_Requested__c, Purpose__c, Term_Months__c,
+                       Applicant_Profile__r.Total_Income__c,
+                       Applicant_Profile__r.Employment_Status__c
+                FROM Loan_Application__c
+                WHERE Id = :applicationId
+                LIMIT 1
+            ];
+            
+            // Get credit score (mock for now, would come from credit bureau)
+            Decimal creditScore = 720; // Default mock credit score
+            ServiceResponse creditResponse = CreditEvaluationService.evaluateCreditScoreById(applicationId);
+            if (creditResponse.success && creditResponse.data != null) {
+                Object scoreObj = creditResponse.data.get('creditScore');
+                if (scoreObj != null) {
+                    creditScore = (Decimal)scoreObj;
+                }
+            }
+            
+            // Calculate DTI ratio (simplified)
+            Decimal annualIncome = app.Applicant_Profile__r.Total_Income__c != null ? 
+                app.Applicant_Profile__r.Total_Income__c : 50000;
+            Decimal monthlyIncome = annualIncome / 12;
+            Decimal estimatedMonthlyDebts = monthlyIncome * 0.35; // Estimate 35% DTI
+            Decimal dtiRatio = (estimatedMonthlyDebts / monthlyIncome) * 100;
+            
+            // Call ML endpoint
+            ServiceResponse mlResponse = HttpCalloutService.callDecisionEngineML(
+                applicationId,
+                creditScore,
+                annualIncome,
+                app.Amount_Requested__c,
+                app.Purpose__c,
+                app.Applicant_Profile__r.Employment_Status__c,
+                24, // Default employment length in months
+                dtiRatio,
+                0, // Previous defaults
+                Integer.valueOf(app.Term_Months__c)
+            );
+            
+            return mlResponse;
+            
+        } catch (Exception e) {
+            System.debug('Error in ML decision evaluation: ' + e.getMessage());
+            // Fall back to mock if ML fails
+            return getMockDecisionResponse(new ServiceRequest());
         }
     }
     

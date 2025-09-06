@@ -32,6 +32,7 @@ public with sharing class LoanApplicationController {
                        Applicant_Profile__c, Applicant_Profile__r.Name,
                        Applicant_Profile__r.Email__c, Applicant_Profile__r.Phone__c,
                        Applicant_Profile__r.Total_Income__c, Applicant_Profile__r.Employment_Status__c,
+                       Applicant_Profile__r.Date_of_Birth__c,
                        (SELECT Id, Outcome__c, Approved_Amount__c, Approved_Rate__c, 
                                Decision_Date__c, Reason_Codes__c
                         FROM Decisions__r
@@ -93,6 +94,7 @@ public with sharing class LoanApplicationController {
             applicantData.put('Name', app.Applicant_Profile__r.Name);
             applicantData.put('Email__c', app.Applicant_Profile__r.Email__c);
             applicantData.put('Phone__c', app.Applicant_Profile__r.Phone__c);
+            applicantData.put('Date_of_Birth__c', app.Applicant_Profile__r.Date_of_Birth__c);
             
             if (!isExternalUser()) {
                 applicantData.put('Total_Income__c', app.Applicant_Profile__r.Total_Income__c);
@@ -178,6 +180,203 @@ public with sharing class LoanApplicationController {
                 throw new LoanApplicationException('Error saving application: ' + e.getMessage());
             }
         }
+    }
+    
+    /**
+     * @description Get the user's most recent application
+     * @return Map containing application data and access info
+     */
+    @AuraEnabled(cacheable=false)
+    public static Map<String, Object> getMostRecentApplication() {
+        Map<String, Object> result = new Map<String, Object>();
+        
+        try {
+            // Get current user ID
+            Id userId = UserInfo.getUserId();
+            
+            // Query for the most recent application for this user
+            List<Loan_Application__c> applications = [
+                SELECT Id, Name, Status__c, Amount_Requested__c, Purpose__c,
+                       Interest_Rate__c, Term_Months__c, Application_Date__c,
+                       Applicant_Profile__c, Applicant_Profile__r.Name,
+                       Applicant_Profile__r.Email__c, Applicant_Profile__r.Phone__c,
+                       Applicant_Profile__r.Total_Income__c, Applicant_Profile__r.Employment_Status__c,
+                       Applicant_Profile__r.Date_of_Birth__c, Applicant_Profile__r.SSN_Encrypted__c,
+                       (SELECT Id, Outcome__c, Approved_Amount__c, Approved_Rate__c, 
+                               Decision_Date__c, Reason_Codes__c
+                        FROM Decisions__r
+                        ORDER BY Decision_Date__c DESC
+                        LIMIT 1)
+                FROM Loan_Application__c
+                WHERE CreatedById = :userId
+                  AND Status__c NOT IN ('Funded', 'Cancelled', 'Declined')
+                ORDER BY LastModifiedDate DESC
+                LIMIT 1
+            ];
+            
+            if (applications.isEmpty()) {
+                result.put('hasApplication', false);
+                result.put('application', null);
+            } else {
+                Loan_Application__c app = applications[0];
+                
+                // Build complete application data including decision info
+                Map<String, Object> appData = new Map<String, Object>();
+                appData.put('Id', app.Id);
+                appData.put('Name', app.Name);
+                appData.put('Status__c', app.Status__c);
+                appData.put('Amount_Requested__c', app.Amount_Requested__c);
+                appData.put('Purpose__c', app.Purpose__c);
+                appData.put('Term_Months__c', app.Term_Months__c);
+                appData.put('Application_Date__c', app.Application_Date__c);
+                
+                // Add approved details if available
+                if (!app.Decisions__r.isEmpty()) {
+                    Decision__c decision = app.Decisions__r[0];
+                    if (decision.Outcome__c == 'Approved') {
+                        appData.put('Approved_Amount__c', decision.Approved_Amount__c);
+                        appData.put('Interest_Rate__c', decision.Approved_Rate__c);
+                        appData.put('Decision_Date__c', decision.Decision_Date__c);
+                        
+                        // Calculate monthly payment
+                        if (decision.Approved_Amount__c != null && decision.Approved_Rate__c != null && app.Term_Months__c != null) {
+                            ServiceResponse paymentResp = LoanCalculatorService.calculateMonthlyPaymentByParams(
+                                decision.Approved_Amount__c, 
+                                decision.Approved_Rate__c, 
+                                Integer.valueOf(app.Term_Months__c)
+                            );
+                            if (paymentResp.success) {
+                                appData.put('Monthly_Payment__c', paymentResp.data.get('monthlyPayment'));
+                            }
+                        }
+                    }
+                    appData.put('declineMessage', decision.Outcome__c == 'Declined' ? 
+                        'Your application was declined.' : null);
+                    appData.put('Reason_Codes__c', decision.Reason_Codes__c);
+                }
+                
+                // Add applicant profile data
+                if (app.Applicant_Profile__c != null) {
+                    Map<String, Object> profileData = new Map<String, Object>();
+                    profileData.put('Id', app.Applicant_Profile__c);
+                    profileData.put('Name', app.Applicant_Profile__r.Name);
+                    profileData.put('Email__c', app.Applicant_Profile__r.Email__c);
+                    profileData.put('Phone__c', app.Applicant_Profile__r.Phone__c);
+                    profileData.put('Total_Income__c', app.Applicant_Profile__r.Total_Income__c);
+                    profileData.put('Employment_Status__c', app.Applicant_Profile__r.Employment_Status__c);
+                    profileData.put('Date_of_Birth__c', app.Applicant_Profile__r.Date_of_Birth__c);
+                    profileData.put('SSN_Encrypted__c', app.Applicant_Profile__r.SSN_Encrypted__c);
+                    appData.put('Applicant_Profile__r', profileData);
+                    appData.put('Applicant_Profile__c', app.Applicant_Profile__c);
+                }
+                
+                result.put('hasApplication', true);
+                result.put('application', appData);
+            }
+            
+            result.put('hasAccess', true);
+            result.put('isExternalUser', false);
+            
+        } catch (Exception e) {
+            result.put('hasAccess', false);
+            result.put('error', 'Error loading recent application: ' + e.getMessage());
+        }
+        
+        return result;
+    }
+    
+    /**
+     * @description Get application by applicant email
+     * @param email Email address to search for
+     * @return Map containing application data and access info
+     */
+    @AuraEnabled(cacheable=false)
+    public static Map<String, Object> getApplicationByEmail(String email) {
+        Map<String, Object> result = new Map<String, Object>();
+        
+        try {
+            result.put('hasAccess', true);
+            result.put('isExternalUser', false);
+            result.put('hasApplication', false);
+            
+            if (String.isBlank(email)) {
+                result.put('error', 'Email address is required');
+                return result;
+            }
+            
+            // Query for the most recent application by email
+            List<Loan_Application__c> applications = [
+                SELECT Id, Name, Status__c, Amount_Requested__c, Purpose__c, 
+                       Term_Months__c, Application_Date__c, 
+                       Applicant_Profile__c,
+                       Applicant_Profile__r.Name,
+                       Applicant_Profile__r.Email__c,
+                       Applicant_Profile__r.Phone__c,
+                       Applicant_Profile__r.Employment_Status__c,
+                       Applicant_Profile__r.Date_of_Birth__c,
+                       Applicant_Profile__r.Total_Income__c,
+                       (SELECT Id, Outcome__c, Approved_Amount__c, Approved_Rate__c, CreatedDate FROM Decisions__r ORDER BY CreatedDate DESC LIMIT 1)
+                FROM Loan_Application__c
+                WHERE Applicant_Profile__r.Email__c = :email
+                ORDER BY CreatedDate DESC
+                LIMIT 1
+            ];
+            
+            if (!applications.isEmpty()) {
+                Loan_Application__c app = applications[0];
+                result.put('hasApplication', true);
+                
+                Map<String, Object> appData = new Map<String, Object>{
+                    'Id' => app.Id,
+                    'Name' => app.Name,
+                    'Status__c' => app.Status__c,
+                    'Amount_Requested__c' => app.Amount_Requested__c,
+                    'Purpose__c' => app.Purpose__c,
+                    'Term_Months__c' => app.Term_Months__c,
+                    'Application_Date__c' => app.Application_Date__c,
+                    'Applicant_Profile__c' => app.Applicant_Profile__c
+                };
+                
+                // Include applicant profile data
+                if (app.Applicant_Profile__r != null) {
+                    appData.put('Applicant_Profile__r', new Map<String, Object>{
+                        'Name' => app.Applicant_Profile__r.Name,
+                        'Email__c' => app.Applicant_Profile__r.Email__c,
+                        'Phone__c' => app.Applicant_Profile__r.Phone__c,
+                        'Employment_Status__c' => app.Applicant_Profile__r.Employment_Status__c,
+                        'Date_of_Birth__c' => app.Applicant_Profile__r.Date_of_Birth__c,
+                        'Total_Income__c' => app.Applicant_Profile__r.Total_Income__c
+                    });
+                }
+                
+                // Include latest decision with approval details
+                if (!app.Decisions__r.isEmpty()) {
+                    Decision__c latestDecision = app.Decisions__r[0];
+                    appData.put('Latest_Decision__c', latestDecision.Outcome__c);
+                    if (latestDecision.Outcome__c == 'Approved') {
+                        appData.put('Approved_Amount__c', latestDecision.Approved_Amount__c);
+                        appData.put('Interest_Rate__c', latestDecision.Approved_Rate__c);
+                        // Calculate monthly payment if we have the necessary data
+                        if (latestDecision.Approved_Amount__c != null && latestDecision.Approved_Rate__c != null) {
+                            Decimal monthlyRate = latestDecision.Approved_Rate__c / 100 / 12;
+                            Integer termMonths = app.Term_Months__c != null ? Integer.valueOf(app.Term_Months__c) : 60;
+                            Decimal payment = latestDecision.Approved_Amount__c * 
+                                (monthlyRate * Math.pow(1 + monthlyRate.doubleValue(), termMonths)) / 
+                                (Math.pow(1 + monthlyRate.doubleValue(), termMonths) - 1);
+                            appData.put('Monthly_Payment__c', payment.setScale(2));
+                        }
+                    }
+                }
+                
+                result.put('application', appData);
+            }
+            
+        } catch (Exception e) {
+            result.put('hasAccess', false);
+            result.put('error', 'Error loading application by email: ' + e.getMessage());
+        }
+        
+        return result;
     }
     
     /**

@@ -3,6 +3,8 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { publish, MessageContext } from 'lightning/messageService';
 import LOAN_APP_CHANNEL from '@salesforce/messageChannel/LoanApplicationUpdates__c';
 import getApplicationData from '@salesforce/apex/LoanApplicationController.getApplicationData';
+import getMostRecentApplication from '@salesforce/apex/LoanApplicationController.getMostRecentApplication';
+import getApplicationByEmail from '@salesforce/apex/LoanApplicationController.getApplicationByEmail';
 import saveApplication from '@salesforce/apex/LoanApplicationController.saveApplication';
 
 export default class LoanApplicationWizard extends LightningElement {
@@ -14,6 +16,8 @@ export default class LoanApplicationWizard extends LightningElement {
     @track isLoading = false;
     @track error = null;
     @track hasAccess = true;
+    @track showChoiceScreen = true;
+    @track emailToLoad = '';
     
     @wire(MessageContext)
     messageContext;
@@ -38,6 +42,11 @@ export default class LoanApplicationWizard extends LightningElement {
     }
     
     get showAcceptanceComponent() {
+        console.log('showAcceptanceComponent check:', {
+            status: this.applicationData.Status__c,
+            approvedAmount: this.applicationData.Approved_Amount__c,
+            applicationData: this.applicationData
+        });
         return this.applicationData.Status__c === 'Approved' && 
                this.applicationData.Approved_Amount__c != null;
     }
@@ -64,7 +73,8 @@ export default class LoanApplicationWizard extends LightningElement {
     // Lifecycle hooks
     connectedCallback() {
         this.detectUserContext();
-        this.loadApplication();
+        // Don't auto-load, show choice screen instead
+        // this.loadApplication();
     }
     
     // Methods
@@ -75,36 +85,99 @@ export default class LoanApplicationWizard extends LightningElement {
         this.isExternalUser = path.includes('/s/') || hostname.includes('.force.com');
     }
     
-    loadApplication() {
+    loadApplication(skipChoiceScreen = false) {
+        if (!skipChoiceScreen && !this.recordId) {
+            // Show choice screen if no recordId
+            this.showChoiceScreen = true;
+            this.isLoading = false;
+            return;
+        }
+        
+        this.showChoiceScreen = false;
         this.isLoading = true;
         this.error = null;
         
-        getApplicationData({ applicationId: this.recordId })
+        // Check for application ID in order of priority:
+        // 1. recordId (from record page context)
+        // 2. sessionStorage (from previous session)
+        // 3. Most recent application (if exists)
+        
+        let applicationId = this.recordId;
+        
+        // If no recordId, check sessionStorage
+        if (!applicationId) {
+            applicationId = sessionStorage.getItem('currentLoanApplicationId');
+            if (applicationId) {
+                console.log('Restored application ID from session:', applicationId);
+                this.recordId = applicationId;
+            }
+        }
+        
+        // If we have an application ID, load it
+        if (applicationId) {
+            getApplicationData({ applicationId: applicationId })
+                .then(result => {
+                    this.handleApplicationDataResult(result);
+                })
+                .catch(error => {
+                    // If error loading saved application, try to get most recent
+                    console.error('Error loading saved application, trying most recent:', error);
+                    this.loadMostRecentApplication();
+                })
+                .finally(() => {
+                    this.isLoading = false;
+                });
+        } else {
+            // No application ID, try to load most recent
+            this.loadMostRecentApplication();
+        }
+    }
+    
+    loadMostRecentApplication() {
+        getMostRecentApplication()
             .then(result => {
-                this.hasAccess = result.hasAccess;
-                
-                if (!result.hasAccess) {
-                    this.error = result.error || 'Access denied';
-                    return;
-                }
-                
-                if (result.application) {
-                    this.applicationData = result.application;
-                    this.determineCurrentStage();
+                if (result.hasApplication && result.application) {
+                    console.log('Loaded most recent application:', result.application.Id);
+                    this.recordId = result.application.Id;
+                    sessionStorage.setItem('currentLoanApplicationId', result.application.Id);
+                    this.handleApplicationDataResult(result);
                 } else {
-                    // New application
+                    // No recent application, create new
+                    console.log('No recent application found, creating new');
                     this.initializeNewApplication();
                 }
-                
-                this.isExternalUser = result.isExternalUser;
             })
             .catch(error => {
-                this.error = error.body?.message || 'Error loading application';
-                console.error('Error loading application:', error);
+                console.error('Error loading recent application:', error);
+                this.initializeNewApplication();
             })
             .finally(() => {
                 this.isLoading = false;
             });
+    }
+    
+    handleApplicationDataResult(result) {
+        this.hasAccess = result.hasAccess;
+        this.showChoiceScreen = false;
+        
+        if (!result.hasAccess) {
+            this.error = result.error || 'Access denied';
+            return;
+        }
+        
+        if (result.application) {
+            this.applicationData = result.application;
+            this.determineCurrentStage();
+            // Save to sessionStorage if we have an ID
+            if (this.applicationData.Id) {
+                sessionStorage.setItem('currentLoanApplicationId', this.applicationData.Id);
+            }
+        } else {
+            // New application
+            this.initializeNewApplication();
+        }
+        
+        this.isExternalUser = result.isExternalUser;
     }
     
     initializeNewApplication() {
@@ -206,6 +279,11 @@ export default class LoanApplicationWizard extends LightningElement {
             .then(applicationId => {
                 this.recordId = applicationId;
                 this.applicationData.Id = applicationId;
+                
+                // Save the application ID to sessionStorage for persistence
+                if (applicationId) {
+                    sessionStorage.setItem('currentLoanApplicationId', applicationId);
+                }
                 
                 this.showToast('Success', 'Application saved successfully', 'success');
                 this.publishUpdate('save');
@@ -364,6 +442,8 @@ export default class LoanApplicationWizard extends LightningElement {
         this.determineCurrentStage();
         this.showToast('Success', 'Congratulations! Your loan has been funded.', 'success');
         this.publishUpdate('accept');
+        // Clear session storage as application is complete
+        this.clearApplicationSession();
     }
     
     handleOfferDeclined(event) {
@@ -371,5 +451,64 @@ export default class LoanApplicationWizard extends LightningElement {
         this.determineCurrentStage();
         this.showToast('Info', 'Loan offer has been declined.', 'info');
         this.publishUpdate('decline');
+        // Clear session storage as application is cancelled
+        this.clearApplicationSession();
+    }
+    
+    clearApplicationSession() {
+        sessionStorage.removeItem('currentLoanApplicationId');
+    }
+    
+    // Method to start a new application (can be called from UI)
+    startNewApplication() {
+        this.clearApplicationSession();
+        this.recordId = null;
+        this.showChoiceScreen = false;
+        this.initializeNewApplication();
+        this.showToast('Info', 'Starting new loan application', 'info');
+    }
+    
+    // Handle email input change
+    handleEmailChange(event) {
+        this.emailToLoad = event.target.value;
+    }
+    
+    // Load application by email
+    loadApplicationByEmail() {
+        if (!this.emailToLoad) {
+            this.showToast('Error', 'Please enter an email address', 'error');
+            return;
+        }
+        
+        this.isLoading = true;
+        this.error = null;
+        this.showChoiceScreen = false;
+        
+        getApplicationByEmail({ email: this.emailToLoad })
+            .then(result => {
+                if (result.hasApplication && result.application) {
+                    this.recordId = result.application.Id;
+                    sessionStorage.setItem('currentLoanApplicationId', result.application.Id);
+                    this.handleApplicationDataResult(result);
+                    this.showToast('Success', 'Application loaded successfully', 'success');
+                } else {
+                    this.showToast('Info', 'No application found for this email. Starting a new application.', 'info');
+                    this.startNewApplication();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading application by email:', error);
+                this.showToast('Error', 'Error loading application: ' + (error.body?.message || error.message), 'error');
+                this.showChoiceScreen = true;
+            })
+            .finally(() => {
+                this.isLoading = false;
+            });
+    }
+    
+    // Continue with existing application
+    continueExistingApplication() {
+        this.showChoiceScreen = false;
+        this.loadMostRecentApplication();
     }
 }

@@ -1,30 +1,87 @@
 <template>
     <lightning-card title="Loan Application" icon-name="standard:approval">
-        <!-- Progress Indicator -->
-        <div class="slds-m-around_medium">
-            <div class="slds-progress">
-                <ol class="slds-progress__list">
-                    <template for:each={stagesWithClasses} for:item="stage">
-                        <li key={stage.value} 
-                            class={stage.class}
-                            data-stage={stage.value}>
-                            <lightning-icon 
-                                icon-name={stage.iconName}
-                                size="x-small"
-                                alternative-text={stage.label}>
-                            </lightning-icon>
-                            <span class="slds-assistive-text">{stage.label}</span>
-                        </li>
-                    </template>
-                </ol>
-                <div class="slds-progress-bar">
-                    <span class="slds-progress-bar__value" 
-                          style={progressBarStyle}>
-                        <span class="slds-assistive-text">Progress: {progressPercent}%</span>
-                    </span>
+        <!-- Choice Screen -->
+        <template if:true={showChoiceScreen}>
+            <div class="slds-m-around_large">
+                <div class="slds-box slds-theme_shade">
+                    <h2 class="slds-text-heading_medium slds-m-bottom_medium">Welcome to Loan Application</h2>
+                    <p class="slds-m-bottom_large">Choose how you would like to proceed:</p>
+                    
+                    <!-- Start New Application -->
+                    <div class="slds-m-bottom_large">
+                        <lightning-button 
+                            label="Start New Application"
+                            variant="brand"
+                            onclick={startNewApplication}
+                            class="slds-m-right_small">
+                        </lightning-button>
+                    </div>
+                    
+                    <!-- Load Existing Application -->
+                    <div class="slds-box">
+                        <h3 class="slds-text-heading_small slds-m-bottom_medium">Load Existing Application</h3>
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="email-input">Enter your email to retrieve your application:</label>
+                            <div class="slds-form-element__control">
+                                <lightning-input
+                                    type="email"
+                                    name="email"
+                                    label=""
+                                    variant="label-hidden"
+                                    placeholder="your.email@example.com"
+                                    value={emailToLoad}
+                                    onchange={handleEmailChange}>
+                                </lightning-input>
+                            </div>
+                        </div>
+                        <div class="slds-m-top_medium">
+                            <lightning-button 
+                                label="Load Application"
+                                variant="neutral"
+                                onclick={loadApplicationByEmail}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                    
+                    <!-- Continue Most Recent -->
+                    <div class="slds-m-top_large">
+                        <lightning-button 
+                            label="Continue Most Recent Application"
+                            variant="text"
+                            onclick={continueExistingApplication}>
+                        </lightning-button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </template>
+        
+        <!-- Progress Indicator -->
+        <template if:false={showChoiceScreen}>
+            <div class="slds-m-around_medium">
+                <div class="slds-progress">
+                    <ol class="slds-progress__list">
+                        <template for:each={stagesWithClasses} for:item="stage">
+                            <li key={stage.value} 
+                                class={stage.class}
+                                data-stage={stage.value}>
+                                <lightning-icon 
+                                    icon-name={stage.iconName}
+                                    size="x-small"
+                                    alternative-text={stage.label}>
+                                </lightning-icon>
+                                <span class="slds-assistive-text">{stage.label}</span>
+                            </li>
+                        </template>
+                    </ol>
+                    <div class="slds-progress-bar">
+                        <span class="slds-progress-bar__value" 
+                              style={progressBarStyle}>
+                            <span class="slds-assistive-text">Progress: {progressPercent}%</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </template>
         
         <!-- Loading Spinner -->
         <template if:true={isLoading}>
@@ -36,78 +93,90 @@
         
         <!-- Error Message -->
         <template if:true={error}>
-            <div class="slds-m-around_medium">
-                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
-                    <lightning-icon 
-                        icon-name="utility:error"
-                        variant="error"
-                        size="small"
-                        class="slds-m-right_small">
-                    </lightning-icon>
-                    <span>{error}</span>
+            <template if:false={showChoiceScreen}>
+                <div class="slds-m-around_medium">
+                    <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                        <lightning-icon 
+                            icon-name="utility:error"
+                            variant="error"
+                            size="small"
+                            class="slds-m-right_small">
+                        </lightning-icon>
+                        <span>{error}</span>
+                    </div>
                 </div>
-            </div>
+            </template>
         </template>
         
         <!-- Main Content Area -->
         <template if:false={isLoading}>
-            <template if:true={hasAccess}>
-                <div class="slds-m-around_medium">
-                    <!-- Application Stage Component -->
-                    <c-loan-application-stage
-                        application-data={applicationData}
-                        current-stage={currentStage}
-                        is-external-user={isExternalUser}
-                        is-read-only={isReadOnly}
-                        onstagechange={handleStageChange}>
-                    </c-loan-application-stage>
+            <template if:false={showChoiceScreen}>
+                <template if:true={hasAccess}>
+                    <div class="slds-m-around_medium">
+                        <!-- Application Stage Component -->
+                        <c-loan-application-stage
+                            application-data={applicationData}
+                            current-stage={currentStage}
+                            is-external-user={isExternalUser}
+                            is-read-only={isReadOnly}
+                            onstagechange={handleStageChange}>
+                        </c-loan-application-stage>
                     
-                    <!-- Loan Offer Acceptance Component (for approved applications) -->
-                    <template if:true={showAcceptanceComponent}>
-                        <div class="slds-m-top_large">
-                            <c-loan-offer-acceptance
-                                application-id={recordId}
-                                approved-amount={applicationData.Approved_Amount__c}
-                                interest-rate={applicationData.Interest_Rate__c}
-                                term-months={applicationData.Term_Months__c}
-                                monthly-payment={applicationData.Monthly_Payment__c}
-                                onofferaccepted={handleOfferAccepted}
-                                onofferdeclined={handleOfferDeclined}>
-                            </c-loan-offer-acceptance>
-                        </div>
-                    </template>
-                </div>
+                        
+                        <!-- Loan Offer Acceptance Component (for approved applications) -->
+                        <template if:true={showAcceptanceComponent}>
+                            <div class="slds-m-top_large">
+                                <c-loan-offer-acceptance
+                                    application-id={recordId}
+                                    approved-amount={applicationData.Approved_Amount__c}
+                                    interest-rate={applicationData.Interest_Rate__c}
+                                    term-months={applicationData.Term_Months__c}
+                                    monthly-payment={applicationData.Monthly_Payment__c}
+                                    onofferaccepted={handleOfferAccepted}
+                                    onofferdeclined={handleOfferDeclined}>
+                                </c-loan-offer-acceptance>
+                            </div>
+                        </template>
+                    </div>
+                </template>
             </template>
         </template>
         
         <!-- Footer Actions -->
         <template if:false={isLoading}>
-            <div slot="footer">
-                <template if:true={hasAccess}>
-                    <lightning-button-group>
-                        <template if:false={isReadOnly}>
-                            <lightning-button 
-                                label="Save Draft"
-                                onclick={handleSaveDraft}
-                                disabled={isLoading}>
-                            </lightning-button>
-                            <lightning-button 
-                                label="Submit Application"
-                                variant="brand"
-                                onclick={handleSubmit}
-                                disabled={isLoading}>
-                            </lightning-button>
-                        </template>
-                        <template if:true={isReadOnly}>
-                            <lightning-button 
-                                label="Refresh"
-                                onclick={loadApplication}
-                                disabled={isLoading}>
-                            </lightning-button>
-                        </template>
-                    </lightning-button-group>
-                </template>
-            </div>
+            <template if:false={showChoiceScreen}>
+                <div slot="footer">
+                    <template if:true={hasAccess}>
+                        <lightning-button-group>
+                            <template if:false={isReadOnly}>
+                                <lightning-button 
+                                    label="Save Draft"
+                                    onclick={handleSaveDraft}
+                                    disabled={isLoading}>
+                                </lightning-button>
+                                <lightning-button 
+                                    label="Submit Application"
+                                    variant="brand"
+                                    onclick={handleSubmit}
+                                    disabled={isLoading}>
+                                </lightning-button>
+                            </template>
+                            <template if:true={isReadOnly}>
+                                <lightning-button 
+                                    label="Refresh"
+                                    onclick={loadApplication}
+                                    disabled={isLoading}>
+                                </lightning-button>
+                                <lightning-button 
+                                    label="Start New Application"
+                                    onclick={startNewApplication}
+                                    disabled={isLoading}>
+                                </lightning-button>
+                            </template>
+                        </lightning-button-group>
+                    </template>
+                </div>
+            </template>
         </template>
     </lightning-card>
 </template>

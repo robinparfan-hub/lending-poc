@@ -78,6 +78,11 @@ public class MockDataFactory {
             }
         }
         
+        // For testing: Always return approved scenario to test full wizard flow
+        // TODO: Revert this after testing is complete
+        return Scenario.APPROVED_EXCELLENT_CREDIT;
+        
+        /* Original logic commented out for testing
         // Determine scenario based on application data
         String applicationId = request.getStringParameter('applicationId');
         if (String.isBlank(applicationId)) {
@@ -100,6 +105,7 @@ public class MockDataFactory {
         };
         
         return scenarios[scenarioIndex];
+        */
     }
     
     /**

@@ -7,6 +7,11 @@ import declineLoanOffer from '@salesforce/apex/LoanApplicationController.decline
 
 export default class LoanOfferAcceptance extends LightningElement {
     @api recordId;
+    @api applicationId; // Alias for recordId  
+    @api approvedAmount;
+    @api interestRate;
+    @api termMonths;
+    @api monthlyPayment;
     @track isLoading = false;
     @track errorMessage = '';
     @track successMessage = '';
@@ -18,7 +23,40 @@ export default class LoanOfferAcceptance extends LightningElement {
     
     wiredApplicationData;
 
-    @wire(getApplicationData, { applicationId: '$recordId' })
+    connectedCallback() {
+        // Use passed attributes if available
+        this.buildOfferDataFromAttributes();
+    }
+
+    buildOfferDataFromAttributes() {
+        const appId = this.applicationId || this.recordId;
+        console.log('buildOfferDataFromAttributes called:', {
+            recordId: this.recordId,
+            applicationId: this.applicationId,
+            approvedAmount: this.approvedAmount,
+            interestRate: this.interestRate,
+            termMonths: this.termMonths,
+            monthlyPayment: this.monthlyPayment
+        });
+
+        if (this.approvedAmount && this.approvedAmount > 0) {
+            this.offerData = {
+                approvedAmount: this.approvedAmount,
+                interestRate: this.interestRate,
+                termMonths: this.termMonths || 60,
+                monthlyPayment: this.monthlyPayment,
+                decisionDate: new Date().toISOString(), // Current date as fallback
+                expirationDate: this.calculateExpirationDate(new Date().toISOString())
+            };
+            console.log('Offer data built from attributes:', this.offerData);
+        }
+    }
+
+    get wireApplicationId() {
+        return this.applicationId || this.recordId;
+    }
+
+    @wire(getApplicationData, { applicationId: '$wireApplicationId' })
     wiredApplication(result) {
         this.wiredApplicationData = result;
         
@@ -31,24 +69,35 @@ export default class LoanOfferAcceptance extends LightningElement {
                 this.offerData = {};
             }
         } else if (result.error) {
-            this.errorMessage = 'Error loading application: ' + result.error.body?.message;
+            this.errorMessage = 'Error loading application: ' + (result.error.body && result.error.body.message ? result.error.body.message : result.error.message || 'Unknown error');
             this.offerData = {};
         }
     }
 
     processApplicationData(application) {
         // Check if this is an approved application with offer data
-        if (application.Status__c === 'Approved' && application.Approved_Amount__c) {
+        // The approval data comes from the controller which adds these fields from the Decision__c record
+        console.log('LoanOfferAcceptance processApplicationData:', {
+            status: application.Status__c,
+            approvedAmount: application.Approved_Amount__c,
+            interestRate: application.Interest_Rate__c,
+            monthlyPayment: application.Monthly_Payment__c,
+            fullApplication: application
+        });
+        
+        if ((application.Status__c === 'Approved' || application.Status__c === 'Funded') && application.Approved_Amount__c) {
             this.offerData = {
                 approvedAmount: application.Approved_Amount__c,
-                interestRate: application.Interest_Rate__c / 100, // Convert to decimal for percentage formatting
-                termMonths: 60, // Default term - could come from application data
+                interestRate: application.Interest_Rate__c, // Already in percentage format from controller
+                termMonths: application.Term_Months__c || 60, // Use application term or default to 60
                 monthlyPayment: application.Monthly_Payment__c,
                 decisionDate: application.Decision_Date__c,
                 expirationDate: this.calculateExpirationDate(application.Decision_Date__c)
             };
+            console.log('LoanOfferAcceptance offerData created:', this.offerData);
         } else {
             this.offerData = {};
+            console.log('LoanOfferAcceptance no offer data - Status:', application.Status__c, 'Amount:', application.Approved_Amount__c);
         }
     }
 
@@ -116,12 +165,22 @@ export default class LoanOfferAcceptance extends LightningElement {
         this.isLoading = true;
 
         acceptLoanOffer({ 
-            applicationId: this.recordId, 
+            applicationId: this.applicationId || this.recordId, 
             signature: this.digitalSignature 
         })
         .then(result => {
             if (result.success) {
                 this.showSuccess(result.message || 'Loan offer accepted successfully!');
+                
+                // Dispatch event to parent wizard
+                const acceptedEvent = new CustomEvent('offeraccepted', {
+                    detail: {
+                        applicationId: this.applicationId || this.recordId,
+                        status: 'Funded'
+                    }
+                });
+                this.dispatchEvent(acceptedEvent);
+                
                 // Refresh the application data
                 return refreshApex(this.wiredApplicationData);
             } else {
@@ -129,7 +188,7 @@ export default class LoanOfferAcceptance extends LightningElement {
             }
         })
         .catch(error => {
-            this.showError('Error accepting offer: ' + error.body?.message);
+            this.showError('Error accepting offer: ' + (error.body && error.body.message ? error.body.message : error.message || 'Unknown error'));
         })
         .finally(() => {
             this.isLoading = false;
@@ -141,12 +200,22 @@ export default class LoanOfferAcceptance extends LightningElement {
         this.isLoading = true;
 
         declineLoanOffer({ 
-            applicationId: this.recordId, 
+            applicationId: this.applicationId || this.recordId, 
             reason: this.declineReason || 'No reason provided' 
         })
         .then(result => {
             if (result.success) {
                 this.showSuccess(result.message || 'Loan offer declined');
+                
+                // Dispatch event to parent wizard
+                const declinedEvent = new CustomEvent('offerdeclined', {
+                    detail: {
+                        applicationId: this.applicationId || this.recordId,
+                        status: 'Cancelled'
+                    }
+                });
+                this.dispatchEvent(declinedEvent);
+                
                 // Refresh the application data
                 return refreshApex(this.wiredApplicationData);
             } else {
@@ -154,7 +223,7 @@ export default class LoanOfferAcceptance extends LightningElement {
             }
         })
         .catch(error => {
-            this.showError('Error declining offer: ' + error.body?.message);
+            this.showError('Error declining offer: ' + (error.body && error.body.message ? error.body.message : error.message || 'Unknown error'));
         })
         .finally(() => {
             this.isLoading = false;
