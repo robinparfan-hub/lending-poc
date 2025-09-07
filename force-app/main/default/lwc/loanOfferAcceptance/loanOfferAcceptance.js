@@ -4,6 +4,7 @@ import { refreshApex } from '@salesforce/apex';
 import getApplicationData from '@salesforce/apex/LoanApplicationController.getApplicationData';
 import acceptLoanOffer from '@salesforce/apex/LoanApplicationController.acceptLoanOffer';
 import declineLoanOffer from '@salesforce/apex/LoanApplicationController.declineLoanOffer';
+import submitCustomerFeedback from '@salesforce/apex/LoanApplicationController.submitCustomerFeedback';
 
 export default class LoanOfferAcceptance extends LightningElement {
     @api recordId;
@@ -20,6 +21,12 @@ export default class LoanOfferAcceptance extends LightningElement {
     @track termsAccepted = false;
     @track declineReason = '';
     @track showDeclineModal = false;
+    
+    // Feedback properties
+    @track showFeedbackModal = false;
+    @track customerRating = 0;
+    @track customerFeedback = '';
+    @track feedbackSubmitted = false;
     
     wiredApplicationData;
 
@@ -53,14 +60,16 @@ export default class LoanOfferAcceptance extends LightningElement {
     }
 
     get wireApplicationId() {
-        return this.applicationId || this.recordId;
+        const id = this.applicationId || this.recordId;
+        // Return null if no ID to prevent wire from making invalid calls
+        return id || null;
     }
 
     @wire(getApplicationData, { applicationId: '$wireApplicationId' })
     wiredApplication(result) {
         this.wiredApplicationData = result;
         
-        if (result.data) {
+        if (result && result.data) {
             if (result.data.hasAccess && result.data.application) {
                 this.processApplicationData(result.data.application);
                 this.errorMessage = '';
@@ -68,7 +77,7 @@ export default class LoanOfferAcceptance extends LightningElement {
                 this.errorMessage = result.data.error || 'Access denied';
                 this.offerData = {};
             }
-        } else if (result.error) {
+        } else if (result && result.error) {
             this.errorMessage = 'Error loading application: ' + (result.error.body && result.error.body.message ? result.error.body.message : result.error.message || 'Unknown error');
             this.offerData = {};
         }
@@ -161,37 +170,58 @@ export default class LoanOfferAcceptance extends LightningElement {
     }
 
     processAcceptOffer() {
+        console.log('processAcceptOffer started');
         this.clearMessages();
         this.isLoading = true;
 
+        const appId = this.applicationId || this.recordId;
+        console.log('Accepting offer for application:', appId);
+        console.log('Digital signature:', this.digitalSignature);
+
         acceptLoanOffer({ 
-            applicationId: this.applicationId || this.recordId, 
+            applicationId: appId, 
             signature: this.digitalSignature 
         })
         .then(result => {
+            console.log('acceptLoanOffer result:', result);
             if (result.success) {
                 this.showSuccess(result.message || 'Loan offer accepted successfully!');
                 
                 // Dispatch event to parent wizard
                 const acceptedEvent = new CustomEvent('offeraccepted', {
                     detail: {
-                        applicationId: this.applicationId || this.recordId,
+                        applicationId: appId,
                         status: 'Funded'
                     }
                 });
+                console.log('Dispatching offeraccepted event');
                 this.dispatchEvent(acceptedEvent);
                 
+                // Show feedback modal after successful acceptance
+                this.showFeedbackModal = true;
+                
                 // Refresh the application data
-                return refreshApex(this.wiredApplicationData);
+                if (this.wiredApplicationData) {
+                    console.log('Refreshing wired data');
+                    try {
+                        return refreshApex(this.wiredApplicationData);
+                    } catch (refreshError) {
+                        console.error('Error refreshing data:', refreshError);
+                        // Continue anyway - the acceptance was successful
+                    }
+                }
             } else {
+                console.error('Accept offer failed:', result.message);
                 this.showError(result.message || 'Failed to accept offer');
             }
         })
         .catch(error => {
+            console.error('Error in processAcceptOffer:', error);
             this.showError('Error accepting offer: ' + (error.body && error.body.message ? error.body.message : error.message || 'Unknown error'));
         })
         .finally(() => {
             this.isLoading = false;
+            console.log('processAcceptOffer completed');
         });
     }
 
@@ -216,6 +246,9 @@ export default class LoanOfferAcceptance extends LightningElement {
                 });
                 this.dispatchEvent(declinedEvent);
                 
+                // Show feedback modal after declining
+                this.showFeedbackModal = true;
+                
                 // Refresh the application data
                 return refreshApex(this.wiredApplicationData);
             } else {
@@ -228,6 +261,66 @@ export default class LoanOfferAcceptance extends LightningElement {
         .finally(() => {
             this.isLoading = false;
         });
+    }
+    
+    // Feedback handling methods
+    handleRatingClick(event) {
+        const rating = parseInt(event.currentTarget.dataset.rating);
+        this.customerRating = rating;
+    }
+    
+    get starArray() {
+        return [1, 2, 3, 4, 5];
+    }
+    
+    getStarStyle(star) {
+        return star <= this.customerRating ? 'color: #FFB400;' : 'color: #DDDBDA;';
+    }
+    
+    handleFeedbackChange(event) {
+        this.customerFeedback = event.target.value;
+    }
+    
+    closeFeedbackModal() {
+        this.showFeedbackModal = false;
+        // Reset feedback values
+        this.customerRating = 0;
+        this.customerFeedback = '';
+    }
+    
+    submitFeedback() {
+        if (this.customerRating === 0) {
+            this.showToast('Error', 'Please provide a rating', 'error');
+            return;
+        }
+        
+        this.isLoading = true;
+        const appId = this.applicationId || this.recordId;
+        
+        submitCustomerFeedback({
+            applicationId: appId,
+            rating: this.customerRating,
+            feedback: this.customerFeedback
+        })
+        .then(result => {
+            if (result.success) {
+                this.feedbackSubmitted = true;
+                this.showToast('Success', result.message || 'Thank you for your feedback!', 'success');
+                this.closeFeedbackModal();
+            } else {
+                this.showToast('Error', 'Failed to submit feedback', 'error');
+            }
+        })
+        .catch(error => {
+            this.showToast('Error', 'Error submitting feedback: ' + (error.body?.message || error.message), 'error');
+        })
+        .finally(() => {
+            this.isLoading = false;
+        });
+    }
+    
+    skipFeedback() {
+        this.closeFeedbackModal();
     }
 
     showSuccess(message) {

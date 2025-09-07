@@ -41,14 +41,20 @@ export default class LoanApplicationWizard extends LightningElement {
         return this.currentStage !== 'draft' || !this.hasAccess;
     }
     
+    get applicationId() {
+        return this.applicationData?.Id || this.recordId || null;
+    }
+
     get showAcceptanceComponent() {
         console.log('showAcceptanceComponent check:', {
-            status: this.applicationData.Status__c,
-            approvedAmount: this.applicationData.Approved_Amount__c,
+            status: this.applicationData?.Status__c,
+            approvedAmount: this.applicationData?.Approved_Amount__c,
+            applicationId: this.applicationId,
             applicationData: this.applicationData
         });
-        return this.applicationData.Status__c === 'Approved' && 
-               this.applicationData.Approved_Amount__c != null;
+        return this.applicationData?.Status__c === 'Approved' && 
+               this.applicationData?.Approved_Amount__c != null &&
+               this.applicationId; // Only show if we have an application ID
     }
     
     get progressBarStyle() {
@@ -438,16 +444,39 @@ export default class LoanApplicationWizard extends LightningElement {
     }
     
     handleOfferAccepted(event) {
-        this.applicationData.Status__c = 'Funded';
-        this.determineCurrentStage();
-        this.showToast('Success', 'Congratulations! Your loan has been funded.', 'success');
-        this.publishUpdate('accept');
-        // Clear session storage as application is complete
-        this.clearApplicationSession();
+        console.log('handleOfferAccepted called in wizard');
+        console.log('Event detail:', event.detail);
+        
+        try {
+            // Create a new object instead of modifying the proxy directly
+            this.applicationData = {
+                ...this.applicationData,
+                Status__c: 'Funded'
+            };
+            console.log('Status updated to Funded');
+            
+            this.determineCurrentStage();
+            console.log('Stage determined:', this.currentStage);
+            
+            this.showToast('Success', 'Congratulations! Your loan has been funded.', 'success');
+            this.publishUpdate('accept');
+            
+            // Clear session storage as application is complete
+            this.clearApplicationSession();
+            console.log('Session cleared');
+        } catch (error) {
+            console.error('Error in handleOfferAccepted:', error);
+            console.error('Error stack:', error.stack);
+            this.showToast('Error', 'An error occurred while processing acceptance', 'error');
+        }
     }
     
     handleOfferDeclined(event) {
-        this.applicationData.Status__c = 'Cancelled';
+        // Create a new object instead of modifying the proxy directly
+        this.applicationData = {
+            ...this.applicationData,
+            Status__c: 'Cancelled'
+        };
         this.determineCurrentStage();
         this.showToast('Info', 'Loan offer has been declined.', 'info');
         this.publishUpdate('decline');

@@ -489,6 +489,53 @@ public with sharing class LoanApplicationController {
     }
     
     /**
+     * @description Submit customer feedback after accepting or declining offer
+     * @param applicationId ID of the loan application
+     * @param rating Customer satisfaction rating (1-5)
+     * @param feedback Customer feedback text
+     * @return Success response
+     */
+    @AuraEnabled
+    public static Map<String, Object> submitCustomerFeedback(String applicationId, Integer rating, String feedback) {
+        try {
+            // Validate inputs
+            if (String.isBlank(applicationId)) {
+                throw new LoanApplicationException('Application ID is required');
+            }
+            
+            // Update application with feedback
+            Loan_Application__c app = [
+                SELECT Id, Customer_Feedback__c, Customer_Rating__c, Feedback_Date__c
+                FROM Loan_Application__c
+                WHERE Id = :applicationId
+                LIMIT 1
+            ];
+            
+            // Update feedback fields
+            if (rating != null && rating >= 1 && rating <= 5) {
+                app.Customer_Rating__c = rating;
+            }
+            
+            if (!String.isBlank(feedback)) {
+                app.Customer_Feedback__c = feedback;
+            }
+            
+            app.Feedback_Date__c = DateTime.now();
+            update app;
+            
+            Map<String, Object> result = new Map<String, Object>();
+            result.put('success', true);
+            result.put('message', 'Thank you for your feedback!');
+            result.put('applicationId', applicationId);
+            
+            return result;
+            
+        } catch (Exception e) {
+            throw new LoanApplicationException('Error submitting feedback: ' + e.getMessage());
+        }
+    }
+    
+    /**
      * @description Check if current user is external (Experience Cloud user)
      * @return True if external user
      */
@@ -629,7 +676,7 @@ public with sharing class LoanApplicationController {
      * @description Trigger asynchronous evaluation of application
      * @param applicationId Application to evaluate
      */
-    @future
+    @future(callout=true)
     private static void evaluateApplicationAsync(String applicationId) {
         try {
             // Call decision engine

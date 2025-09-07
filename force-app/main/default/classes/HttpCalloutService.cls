@@ -6,7 +6,7 @@
 public with sharing class HttpCalloutService {
     
     // Timeout configuration
-    private static final Integer DEFAULT_TIMEOUT = 30000; // 30 seconds
+    private static final Integer DEFAULT_TIMEOUT = 60000; // 60 seconds - increased for Render cold starts
     
     /**
      * @description Make HTTP POST request to external service

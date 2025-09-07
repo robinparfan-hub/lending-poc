@@ -242,13 +242,14 @@ app.post('/api/v1/ml-evaluate', (req, res) => {
   console.log('ML Evaluate endpoint called with:', req.body);
   
   // Extract applicationId from the request body
-  // The ML endpoint expects the same format but wrapped differently
-  const { applicationId } = req.body;
+  // Salesforce sends 'applicantId' for ML mode, but we need to use it as applicationId
+  const { applicantId, applicationId } = req.body;
+  const appId = applicationId || applicantId;
   
-  console.log('Evaluating application:', applicationId);
+  console.log('Evaluating application:', appId);
   
   // Use the same logic as the regular evaluate endpoint
-  const scenario = determineScenario(applicationId);
+  const scenario = determineScenario(appId);
   
   if (scenario.error) {
     return res.status(500).json({

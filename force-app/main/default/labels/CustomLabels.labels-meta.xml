@@ -62,7 +62,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Use Mock Data for Decision Engine Service</shortDescription>
-        <value>true</value>
+        <value>false</value>
     </labels>
     <labels>
         <fullName>Use_Mock_Data_Income_Verification</fullName>

@@ -1,0 +1,8 @@
+.star-icon {
+    font-size: 2rem;
+    color: #DDDBDA;
+}
+
+.star-icon.selected {
+    color: #FFB400;
+}

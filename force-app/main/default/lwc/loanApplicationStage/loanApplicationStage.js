@@ -50,6 +50,46 @@ export default class LoanApplicationStage extends LightningElement {
                 ...(this.applicationData?.Applicant_Profile__r || {})
             }
         };
+        
+        // TEST PREPOPULATION - REMOVE FOR PRODUCTION
+        // Only prepopulate if this is a new application (draft stage with no existing data)
+        if (this.isDraftStage && !this.localApplicationData.Amount_Requested__c) {
+            this.prepopulateTestData();
+        }
+    }
+    
+    // TEST METHOD - REMOVE FOR PRODUCTION
+    prepopulateTestData() {
+        // Generate timestamp in YYYYMMDDHHmm format
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timestamp = `${year}${month}${day}${hours}${minutes}`;
+        
+        // Prepopulate loan details matching Decision Engine APPROVED_EXCELLENT_CREDIT scenario
+        this.localApplicationData.Amount_Requested__c = 50000;  // Matches approved amount
+        this.localApplicationData.Purpose__c = 'Home Improvement';
+        this.localApplicationData.Term_Months__c = 60;  // Matches approved term
+        
+        // Ensure Applicant_Profile__r exists
+        if (!this.localApplicationData.Applicant_Profile__r) {
+            this.localApplicationData.Applicant_Profile__r = {};
+        }
+        
+        // Prepopulate applicant information with timestamp
+        this.localApplicationData.Applicant_Profile__r.Name = `Test ${timestamp}`;
+        this.localApplicationData.Applicant_Profile__r.Email__c = `${timestamp}@test.com`;
+        this.localApplicationData.Applicant_Profile__r.Date_of_Birth__c = '2000-12-31';
+        this.localApplicationData.Applicant_Profile__r.Employment_Status__c = 'Employed';
+        this.localApplicationData.Applicant_Profile__r.Phone__c = '555-555-5555';
+        this.localApplicationData.Applicant_Profile__r.Total_Income__c = 120000;  // High income for excellent credit
+        
+        console.log('TEST DATA PREPOPULATED with timestamp:', timestamp);
+        console.log('Values match Decision Engine APPROVED_EXCELLENT_CREDIT scenario');
+        console.log('To remove prepopulation, delete the prepopulateTestData() method and its call in connectedCallback()');
     }
     
     @api
