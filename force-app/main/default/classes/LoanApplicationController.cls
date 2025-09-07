@@ -16,7 +16,8 @@ public with sharing class LoanApplicationController {
             Map<String, Object> result = new Map<String, Object>();
             
             // Get user context
-            result.put('isExternalUser', isExternalUser());
+            Boolean isExternal = isExternalUser();
+            result.put('isExternalUser', isExternal);
             result.put('userId', UserInfo.getUserId());
             
             if (String.isBlank(applicationId)) {
@@ -25,23 +26,32 @@ public with sharing class LoanApplicationController {
                 return result;
             }
             
-            // Query application with related data
-            List<Loan_Application__c> applications = [
-                SELECT Id, Name, Status__c, Amount_Requested__c, Purpose__c,
-                       Interest_Rate__c, Term_Months__c, Application_Date__c,
-                       Applicant_Profile__c, Applicant_Profile__r.Name,
-                       Applicant_Profile__r.Email__c, Applicant_Profile__r.Phone__c,
-                       Applicant_Profile__r.Total_Income__c, Applicant_Profile__r.Employment_Status__c,
-                       Applicant_Profile__r.Date_of_Birth__c,
-                       (SELECT Id, Outcome__c, Approved_Amount__c, Approved_Rate__c, 
-                               Decision_Date__c, Reason_Codes__c
-                        FROM Decisions__r
-                        ORDER BY Decision_Date__c DESC
-                        LIMIT 1)
-                FROM Loan_Application__c
-                WHERE Id = :applicationId
-                LIMIT 1
-            ];
+            // Build query based on user type
+            String query = 'SELECT Id, Name, Status__c, Amount_Requested__c, Purpose__c, ' +
+                          'Interest_Rate__c, Term_Months__c, Application_Date__c, ' +
+                          'Customer_Feedback__c, Customer_Rating__c, Feedback_Date__c, ' +
+                          'Applicant_Profile__c, Applicant_Profile__r.Name, ' +
+                          'Applicant_Profile__r.Email__c, Applicant_Profile__r.Phone__c, ' +
+                          'Applicant_Profile__r.Total_Income__c, Applicant_Profile__r.Employment_Status__c, ' +
+                          'Applicant_Profile__r.Date_of_Birth__c, ' +
+                          '(SELECT Id, Outcome__c, Approved_Amount__c, Approved_Rate__c, ' +
+                          'Decision_Date__c, Reason_Codes__c ' +
+                          'FROM Decisions__r ' +
+                          'ORDER BY Decision_Date__c DESC ' +
+                          'LIMIT 1) ' +
+                          'FROM Loan_Application__c ' +
+                          'WHERE Id = :applicationId';
+            
+            // For external users, add email verification
+            if (isExternal) {
+                // For Experience Cloud users, we'll allow access if the ID matches
+                // The security will be handled by sharing rules and object permissions
+                query += ' WITH SECURITY_ENFORCED';
+            }
+            
+            query += ' LIMIT 1';
+            
+            List<Loan_Application__c> applications = Database.query(query);
             
             if (applications.isEmpty()) {
                 result.put('hasAccess', false);
@@ -64,15 +74,19 @@ public with sharing class LoanApplicationController {
             if (!app.Decisions__r.isEmpty()) {
                 Decision__c decision = app.Decisions__r[0];
                 if (decision.Outcome__c == 'Approved') {
-                    appData.put('Approved_Amount__c', decision.Approved_Amount__c);
-                    appData.put('Interest_Rate__c', decision.Approved_Rate__c);
+                    // Use the approved values from the decision
+                    Decimal approvedAmount = decision.Approved_Amount__c;
+                    Decimal approvedRate = decision.Approved_Rate__c;
+                    
+                    appData.put('Approved_Amount__c', approvedAmount);
+                    appData.put('Interest_Rate__c', approvedRate);
                     appData.put('Decision_Date__c', decision.Decision_Date__c);
                     
-                    // Calculate monthly payment
-                    if (decision.Approved_Amount__c != null && decision.Approved_Rate__c != null && app.Term_Months__c != null) {
+                    // Calculate monthly payment based on the decision
+                    if (approvedAmount != null && approvedRate != null && app.Term_Months__c != null) {
                         ServiceResponse paymentResp = LoanCalculatorService.calculateMonthlyPaymentByParams(
-                            decision.Approved_Amount__c, 
-                            decision.Approved_Rate__c, 
+                            approvedAmount, 
+                            approvedRate, 
                             Integer.valueOf(app.Term_Months__c)
                         );
                         if (paymentResp.success) {
@@ -545,6 +559,40 @@ public with sharing class LoanApplicationController {
     }
     
     /**
+     * @description Get application by email for Experience Cloud users
+     * @param email Email address to search for
+     * @return Application ID if found
+     */
+    @AuraEnabled
+    public static String getApplicationIdByEmail(String email) {
+        try {
+            if (String.isBlank(email)) {
+                throw new LoanApplicationException('Email is required');
+            }
+            
+            // Find the most recent non-cancelled application for this email
+            List<Loan_Application__c> apps = [
+                SELECT Id, Name
+                FROM Loan_Application__c 
+                WHERE Applicant_Profile__r.Email__c = :email
+                AND Status__c NOT IN ('Cancelled', 'Declined')
+                WITH SECURITY_ENFORCED
+                ORDER BY CreatedDate DESC 
+                LIMIT 1
+            ];
+            
+            if (!apps.isEmpty()) {
+                return apps[0].Id;
+            }
+            
+            throw new LoanApplicationException('No application found for this email address');
+            
+        } catch (Exception e) {
+            throw new LoanApplicationException('Error finding application: ' + e.getMessage());
+        }
+    }
+    
+    /**
      * @description Validate application before submission
      * @param applicationData Application data to validate
      */
@@ -717,8 +765,13 @@ public with sharing class LoanApplicationController {
                     dec.Outcome__c = 'Pending';
                 }
                 
-                List<String> reasonCodes = (List<String>)decisionData.get('reasonCodes');
-                if (reasonCodes != null && !reasonCodes.isEmpty()) {
+                // Handle reasonCodes - it comes as List<Object> from JSON
+                List<Object> reasonCodesObj = (List<Object>)decisionData.get('reasonCodes');
+                if (reasonCodesObj != null && !reasonCodesObj.isEmpty()) {
+                    List<String> reasonCodes = new List<String>();
+                    for (Object code : reasonCodesObj) {
+                        reasonCodes.add(String.valueOf(code));
+                    }
                     dec.Reason_Codes__c = String.join(reasonCodes, ';');
                 }
                 

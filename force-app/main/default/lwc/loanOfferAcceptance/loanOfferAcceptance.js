@@ -5,6 +5,7 @@ import getApplicationData from '@salesforce/apex/LoanApplicationController.getAp
 import acceptLoanOffer from '@salesforce/apex/LoanApplicationController.acceptLoanOffer';
 import declineLoanOffer from '@salesforce/apex/LoanApplicationController.declineLoanOffer';
 import submitCustomerFeedback from '@salesforce/apex/LoanApplicationController.submitCustomerFeedback';
+import getApplicationIdByEmail from '@salesforce/apex/LoanApplicationController.getApplicationIdByEmail';
 
 export default class LoanOfferAcceptance extends LightningElement {
     @api recordId;
@@ -28,11 +29,30 @@ export default class LoanOfferAcceptance extends LightningElement {
     @track customerFeedback = '';
     @track feedbackSubmitted = false;
     
+    // Email lookup properties
+    @track showEmailLookup = false;
+    @track lookupEmail = '';
+    @track isLookingUp = false;
+    
     wiredApplicationData;
 
     connectedCallback() {
+        // Check if we have a recordId from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRecordId = urlParams.get('recordId') || urlParams.get('id');
+        
+        if (urlRecordId) {
+            this.recordId = urlRecordId;
+            this.applicationId = urlRecordId;
+        }
+        
         // Use passed attributes if available
         this.buildOfferDataFromAttributes();
+        
+        // Show email lookup if no record ID
+        if (!this.recordId && !this.applicationId) {
+            this.showEmailLookup = true;
+        }
     }
 
     buildOfferDataFromAttributes() {
@@ -269,12 +289,14 @@ export default class LoanOfferAcceptance extends LightningElement {
         this.customerRating = rating;
     }
     
-    get starArray() {
-        return [1, 2, 3, 4, 5];
-    }
-    
-    getStarStyle(star) {
-        return star <= this.customerRating ? 'color: #FFB400;' : 'color: #DDDBDA;';
+    get stars() {
+        return [
+            { value: 1, label: '1 star', variant: this.customerRating >= 1 ? 'warning' : '' },
+            { value: 2, label: '2 stars', variant: this.customerRating >= 2 ? 'warning' : '' },
+            { value: 3, label: '3 stars', variant: this.customerRating >= 3 ? 'warning' : '' },
+            { value: 4, label: '4 stars', variant: this.customerRating >= 4 ? 'warning' : '' },
+            { value: 5, label: '5 stars', variant: this.customerRating >= 5 ? 'warning' : '' }
+        ];
     }
     
     handleFeedbackChange(event) {
@@ -348,5 +370,39 @@ export default class LoanOfferAcceptance extends LightningElement {
             mode: 'dismissable'
         });
         this.dispatchEvent(evt);
+    }
+    
+    // Email lookup methods
+    handleEmailChange(event) {
+        this.lookupEmail = event.target.value;
+    }
+    
+    handleEmailLookup() {
+        if (!this.lookupEmail || !this.lookupEmail.includes('@')) {
+            this.showToast('Error', 'Please enter a valid email address', 'error');
+            return;
+        }
+        
+        this.isLookingUp = true;
+        this.errorMessage = '';
+        
+        getApplicationIdByEmail({ email: this.lookupEmail })
+            .then(applicationId => {
+                if (applicationId) {
+                    this.recordId = applicationId;
+                    this.applicationId = applicationId;
+                    this.showEmailLookup = false;
+                    // Trigger wire adapter with new ID
+                    return refreshApex(this.wiredApplicationData);
+                } else {
+                    this.errorMessage = 'No application found for this email address';
+                }
+            })
+            .catch(error => {
+                this.errorMessage = error.body?.message || 'Error looking up application';
+            })
+            .finally(() => {
+                this.isLookingUp = false;
+            });
     }
 }

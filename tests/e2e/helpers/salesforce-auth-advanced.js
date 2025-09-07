@@ -17,29 +17,13 @@ class SalesforceAuthAdvanced {
     console.log('🔐 Using Salesforce CLI session for authentication');
     
     try {
-      // Get the access token from SFDX
-      const authInfo = execSync('sf org display --target-org lending-poc --json', { 
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'ignore'] // Ignore stderr
+      // Get the access token from SFDX, suppressing warnings to stderr
+      const authInfo = execSync('sf org display --target-org lending-poc --json 2>/dev/null', { 
+        encoding: 'utf8'
       });
       
-      // Find the first valid JSON object in the output
-      let auth;
-      try {
-        // First try to parse the entire output
-        auth = JSON.parse(authInfo);
-      } catch (e) {
-        // If that fails, try to extract JSON from the output
-        const jsonStart = authInfo.indexOf('{');
-        const jsonEnd = authInfo.lastIndexOf('}') + 1;
-        
-        if (jsonStart === -1 || jsonEnd === 0) {
-          throw new Error('No JSON found in SF CLI output');
-        }
-        
-        const jsonStr = authInfo.substring(jsonStart, jsonEnd);
-        auth = JSON.parse(jsonStr);
-      }
+      // Parse the JSON output
+      const auth = JSON.parse(authInfo);
       
       if (auth.status !== 0) {
         throw new Error('Failed to get auth info from Salesforce CLI');

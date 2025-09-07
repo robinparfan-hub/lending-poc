@@ -4,6 +4,7 @@ import { refreshApex } from '@salesforce/apex';
 import getApplicationData from '@salesforce/apex/LoanApplicationController.getApplicationData';
 import acceptLoanOffer from '@salesforce/apex/LoanApplicationController.acceptLoanOffer';
 import declineLoanOffer from '@salesforce/apex/LoanApplicationController.declineLoanOffer';
+import getApplicationIdByEmail from '@salesforce/apex/LoanApplicationController.getApplicationIdByEmail';
 
 export default class LoanApplicationStatus extends LightningElement {
     @api recordId;
@@ -18,7 +19,25 @@ export default class LoanApplicationStatus extends LightningElement {
     @track digitalSignature = '';
     @track declineReason = '';
     
+    // Email lookup properties
+    @track showEmailLookup = false;
+    @track lookupEmail = '';
+    @track isLookingUp = false;
+    
     wiredApplicationData;
+    
+    connectedCallback() {
+        // Check if we have a recordId from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRecordId = urlParams.get('recordId') || urlParams.get('id');
+        
+        if (urlRecordId) {
+            this.recordId = urlRecordId;
+        } else if (!this.recordId) {
+            // No record ID available, show email lookup
+            this.showEmailLookup = true;
+        }
+    }
 
     @wire(getApplicationData, { applicationId: '$recordId' })
     wiredApplication(result) {
@@ -202,5 +221,38 @@ export default class LoanApplicationStatus extends LightningElement {
             variant: variant
         });
         this.dispatchEvent(evt);
+    }
+    
+    // Email lookup methods
+    handleEmailChange(event) {
+        this.lookupEmail = event.target.value;
+    }
+    
+    handleEmailLookup() {
+        if (!this.lookupEmail || !this.lookupEmail.includes('@')) {
+            this.showToast('Error', 'Please enter a valid email address', 'error');
+            return;
+        }
+        
+        this.isLookingUp = true;
+        this.errorMessage = '';
+        
+        getApplicationIdByEmail({ email: this.lookupEmail })
+            .then(applicationId => {
+                if (applicationId) {
+                    this.recordId = applicationId;
+                    this.showEmailLookup = false;
+                    // Refresh the wired data with new record ID
+                    return refreshApex(this.wiredApplicationData);
+                } else {
+                    this.errorMessage = 'No application found for this email address';
+                }
+            })
+            .catch(error => {
+                this.errorMessage = error.body?.message || 'Error looking up application';
+            })
+            .finally(() => {
+                this.isLookingUp = false;
+            });
     }
 }

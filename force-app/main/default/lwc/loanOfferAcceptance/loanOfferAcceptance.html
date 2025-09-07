@@ -109,14 +109,41 @@
                 </div>
             </div>
 
+            <!-- Email Lookup Form -->
+            <div if:true={showEmailLookup} class="slds-box slds-m-bottom_medium">
+                <h3 class="slds-text-heading_small slds-m-bottom_medium">Look Up Your Loan Offer</h3>
+                <p class="slds-m-bottom_medium">Enter the email address you used when applying for the loan:</p>
+                <div class="slds-form-element">
+                    <lightning-input
+                        type="email"
+                        label="Email Address"
+                        value={lookupEmail}
+                        onchange={handleEmailChange}
+                        placeholder="your.email@example.com"
+                        required>
+                    </lightning-input>
+                </div>
+                <div class="slds-m-top_medium">
+                    <lightning-button
+                        label="Find My Loan Offer"
+                        variant="brand"
+                        onclick={handleEmailLookup}
+                        disabled={isLookingUp}>
+                    </lightning-button>
+                </div>
+                <lightning-spinner if:true={isLookingUp} alternative-text="Looking up application..." size="small"></lightning-spinner>
+            </div>
+            
             <!-- No Offer Available -->
-            <div if:false={hasOffer} class="slds-text-align_center slds-m-top_large">
+            <template if:false={hasOffer}>
+                <div if:false={showEmailLookup} class="slds-text-align_center slds-m-top_large">
                 <lightning-icon icon-name="utility:info" size="large" class="slds-m-bottom_medium"></lightning-icon>
                 <h3 class="slds-text-heading_medium slds-m-bottom_small">No Loan Offer Available</h3>
                 <p class="slds-text-color_weak">
                     This application either has not been approved yet or the offer has already been processed.
                 </p>
-            </div>
+                </div>
+            </template>
         </div>
 
         <!-- Decline Reason Modal -->
@@ -178,27 +205,22 @@
                             <div class="slds-text-title_caps slds-text-color_weak slds-m-bottom_small">
                                 Rate your experience
                             </div>
-                            <div class="star-rating">
-                                <button class="star-button" data-rating="1" onclick={handleRatingClick}
-                                        style="font-size: 2rem; border: none; background: none; cursor: pointer; padding: 0.25rem;">
-                                    <span class={customerRating >= 1 ? 'star-icon selected' : 'star-icon'}>★</span>
-                                </button>
-                                <button class="star-button" data-rating="2" onclick={handleRatingClick}
-                                        style="font-size: 2rem; border: none; background: none; cursor: pointer; padding: 0.25rem;">
-                                    <span class={customerRating >= 2 ? 'star-icon selected' : 'star-icon'}>★</span>
-                                </button>
-                                <button class="star-button" data-rating="3" onclick={handleRatingClick}
-                                        style="font-size: 2rem; border: none; background: none; cursor: pointer; padding: 0.25rem;">
-                                    <span class={customerRating >= 3 ? 'star-icon selected' : 'star-icon'}>★</span>
-                                </button>
-                                <button class="star-button" data-rating="4" onclick={handleRatingClick}
-                                        style="font-size: 2rem; border: none; background: none; cursor: pointer; padding: 0.25rem;">
-                                    <span class={customerRating >= 4 ? 'star-icon selected' : 'star-icon'}>★</span>
-                                </button>
-                                <button class="star-button" data-rating="5" onclick={handleRatingClick}
-                                        style="font-size: 2rem; border: none; background: none; cursor: pointer; padding: 0.25rem;">
-                                    <span class={customerRating >= 5 ? 'star-icon selected' : 'star-icon'}>★</span>
-                                </button>
+                            <div class="slds-button-group" role="group">
+                                <template for:each={stars} for:item="star">
+                                    <button key={star.value} 
+                                            type="button"
+                                            class="slds-button slds-button_icon"
+                                            data-rating={star.value}
+                                            onclick={handleRatingClick}
+                                            title={star.label}>
+                                        <lightning-icon 
+                                            icon-name="utility:favorite"
+                                            size="large"
+                                            variant={star.variant}>
+                                        </lightning-icon>
+                                        <span class="slds-assistive-text">{star.label}</span>
+                                    </button>
+                                </template>
                             </div>
                         </div>
                         

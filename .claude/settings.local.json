@@ -55,7 +55,10 @@
       "Bash(sf apex log get:*)",
       "mcp__render__list_services",
       "mcp__render__list_workspaces",
-      "mcp__render__list_deploys"
+      "mcp__render__list_deploys",
+      "Bash(sf org login web:*)",
+      "Bash(open test-results/loan-application-e2e-Loan--063c0-ation-from-start-to-funding-chromium/test-failed-1.png)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

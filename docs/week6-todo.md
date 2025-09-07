@@ -7,6 +7,40 @@
 
 ---
 
+## ✅ COMPLETED: Major Achievements (Sep 7, 2025)
+**Achievement Unlocked**: External Service Integration + E2E Test Automation + Customer Portal!
+
+### 1. External Service Integration
+- [x] Switched from mock data to real external Decision Engine service
+- [x] Fixed @future(callout=true) annotation for async HTTP callouts
+- [x] Resolved field mapping issues between Salesforce and Decision Engine
+- [x] Fixed type casting error for List<Object> to List<String> conversion
+- [x] Decision records now properly created with all loan details
+- [x] UI displays Approved Amount, Interest Rate, Term, and Monthly Payment correctly
+
+### 2. End-to-End Test Automation
+- [x] Created comprehensive Playwright test for loan application flow
+- [x] Implemented Salesforce CLI authentication (no password needed)
+- [x] Test fills all form fields programmatically (not relying on prepopulation)
+- [x] Captures and uses dynamic test names throughout the flow
+- [x] Handles Digital Acceptance with signature and terms checkbox
+- [x] Waits dynamically for Decision Engine response (handles Render cold starts)
+- [x] Successfully validates complete flow from application to funding
+
+### 3. External Site Deployment
+- [x] Deployed Loan Application Status as public-facing external site
+- [x] Email-based application lookup for customers
+- [x] Real-time status display without Salesforce login
+- [x] Digital acceptance of loan offers from external site
+- [x] Responsive design for mobile and desktop
+
+**Technical Implementation**:
+- External Decision Engine service deployed on Render (free tier)
+- ML endpoint configured for intelligent decisioning
+- Proper error handling for cold starts and timeouts
+- Playwright test runs in headed Chrome mode for visibility
+- Test data configured to match Decision Engine approval scenarios
+
 ## 🎯 Priority 1: Critical Bug Fixes (Day 1)
 
 ### JavaScript Issues in Loan Funding
@@ -26,21 +60,21 @@
 ## 🤖 Priority 2: Agentforce/GenAI Implementation (Days 2-3)
 
 ### Agentforce Setup
-- [ ] Enable Einstein GPT in Salesforce org
-- [ ] Configure Agentforce with custom prompts
-- [ ] Set up Data Cloud connection if required
-- [ ] Create Agent Actions for loan processing
+- [x] Enable Einstein GPT in Salesforce org
+- [x] Configure Agentforce with custom prompts
+- [x] Set up Data Cloud connection if required
+- [x] Create Agent Actions for loan processing
 
 ### RAG Implementation
-- [ ] Upload PDF policy documents to Salesforce Data Library
-- [ ] Configure knowledge articles from existing documentation
-- [ ] Set up vector embeddings for semantic search
-- [ ] Create custom prompts for loan-specific queries
+- [x] Upload PDF policy documents to Salesforce Data Library
+- [x] Configure knowledge articles from existing documentation
+- [x] Set up vector embeddings for semantic search
+- [x] Create custom prompts for loan-specific queries
 
 ### GenAI Use Cases
-- [ ] Implement intelligent loan recommendation agent
-- [ ] Add conversational UI for application assistance
-- [ ] Create automated underwriting explanations
+- [x] Implement intelligent loan recommendation agent
+- [x] Add conversational UI for application assistance
+- [x] Create automated underwriting explanations
 - [ ] Build fraud detection alerts with AI insights
 
 ---

@@ -156,12 +156,39 @@
                 </div>
             </div>
 
-            <!-- No Application Found -->
-            <div if:false={applicationData} class="slds-text-align_center slds-m-top_large">
-                <lightning-icon icon-name="utility:warning" size="large" class="slds-m-bottom_medium"></lightning-icon>
-                <h3 class="slds-text-heading_medium slds-m-bottom_small">No Application Found</h3>
-                <p class="slds-text-color_weak">Please provide a valid application ID to view status.</p>
+            <!-- Email Lookup Form -->
+            <div if:true={showEmailLookup} class="slds-box slds-m-bottom_medium">
+                <h3 class="slds-text-heading_small slds-m-bottom_medium">Look Up Your Application</h3>
+                <p class="slds-m-bottom_medium">Enter the email address you used when applying for the loan:</p>
+                <div class="slds-form-element">
+                    <lightning-input
+                        type="email"
+                        label="Email Address"
+                        value={lookupEmail}
+                        onchange={handleEmailChange}
+                        placeholder="your.email@example.com"
+                        required>
+                    </lightning-input>
+                </div>
+                <div class="slds-m-top_medium">
+                    <lightning-button
+                        label="Find My Application"
+                        variant="brand"
+                        onclick={handleEmailLookup}
+                        disabled={isLookingUp}>
+                    </lightning-button>
+                </div>
+                <lightning-spinner if:true={isLookingUp} alternative-text="Looking up application..." size="small"></lightning-spinner>
             </div>
+            
+            <!-- No Application Found -->
+            <template if:false={applicationData}>
+                <div if:false={showEmailLookup} class="slds-text-align_center slds-m-top_large">
+                    <lightning-icon icon-name="utility:warning" size="large" class="slds-m-bottom_medium"></lightning-icon>
+                    <h3 class="slds-text-heading_medium slds-m-bottom_small">No Application Found</h3>
+                    <p class="slds-text-color_weak">Please provide a valid application ID to view status.</p>
+                </div>
+            </template>
         </div>
 
         <!-- Offer Actions Modal -->

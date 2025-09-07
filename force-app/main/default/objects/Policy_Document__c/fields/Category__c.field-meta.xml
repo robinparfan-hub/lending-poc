@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Category__c</fullName>
+    <externalId>false</externalId>
+    <label>Category</label>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Decision Engine</fullName>
+                <default>false</default>
+                <label>Decision Engine</label>
+            </value>
+            <value>
+                <fullName>Income Verification</fullName>
+                <default>false</default>
+                <label>Income Verification</label>
+            </value>
+            <value>
+                <fullName>ML Services</fullName>
+                <default>false</default>
+                <label>ML Services</label>
+            </value>
+            <value>
+                <fullName>Compliance</fullName>
+                <default>false</default>
+                <label>Compliance</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
