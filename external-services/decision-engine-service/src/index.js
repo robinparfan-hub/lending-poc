@@ -235,6 +235,71 @@ app.post('/api/v1/evaluate-application', (req, res) => {
 });
 
 /**
+ * ML-enhanced evaluate application endpoint
+ * Alias for /api/v1/evaluate-application to support ML mode in Salesforce
+ */
+app.post('/api/v1/ml-evaluate', (req, res) => {
+  console.log('ML Evaluate endpoint called with:', req.body);
+  
+  // Extract applicationId from the request body
+  // The ML endpoint expects the same format but wrapped differently
+  const { applicationId } = req.body;
+  
+  console.log('Evaluating application:', applicationId);
+  
+  // Use the same logic as the regular evaluate endpoint
+  const scenario = determineScenario(applicationId);
+  
+  if (scenario.error) {
+    return res.status(500).json({
+      success: false,
+      message: scenario.error,
+      errorCode: 'SERVICE_ERROR'
+    });
+  }
+  
+  const response = {
+    success: true,
+    data: {
+      decision: scenario.decision,
+      approvedAmount: scenario.approvedAmount,
+      interestRate: scenario.interestRate,
+      term: scenario.term,
+      monthlyPayment: scenario.monthlyPayment,
+      reasonCodes: scenario.reasonCodes,
+      conditions: scenario.conditions,
+      denialReasons: scenario.denialReasons,
+      creditEvaluation: {
+        creditScore: scenario.creditScore,
+        creditGrade: scenario.creditGrade,
+        riskLevel: scenario.riskLevel,
+        bureau: 'Experian',
+        scoreDate: new Date().toISOString().split('T')[0],
+        factors: scenario.creditScore >= 750 
+          ? ['Excellent payment history', 'Low credit utilization', 'Long credit history']
+          : scenario.creditScore >= 680
+          ? ['Good payment history', 'Moderate credit utilization']
+          : ['Fair payment history', 'Some recent inquiries']
+      },
+      processedDate: new Date().toISOString(),
+      expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    metadata: {
+      requestId: `REQ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      processingTime: Math.floor(Math.random() * 500) + 100
+    }
+  };
+  
+  // Add pending items if applicable
+  if (scenario.pendingItems) {
+    response.data.pendingItems = scenario.pendingItems;
+  }
+  
+  res.json(response);
+});
+
+/**
  * Get credit score only
  * Matches Apex CreditEvaluationService.evaluateCreditScore
  */
